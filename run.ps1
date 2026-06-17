@@ -108,5 +108,5 @@ if ($StartFrontend) {
 }
 
 if (!$BackendOnly -and !$FrontendOnly) {
-    Write-Host "`nBoth servers started — close their windows to stop." -ForegroundColor Cyan
+    Write-Host "`nBoth servers started - close their windows to stop." -ForegroundColor Cyan
 }
