@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { api } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
@@ -56,32 +57,86 @@ export default function RequestButton({ ride, onUpdate }) {
   }
 
   if (existing?.status === 'accepted') {
-    return <span className="badge badge-success">You're in!</span>
+    return (
+      <motion.span
+        className="badge badge-success"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', stiffness: 400 }}
+      >
+        You're in! ✓
+      </motion.span>
+    )
   }
 
   if (existing?.status === 'pending') {
     return (
-      <button className="btn-secondary" onClick={cancelRequest} disabled={loading}>
-        Cancel Request
-      </button>
+      <motion.button
+        className="btn-secondary"
+        onClick={cancelRequest}
+        disabled={loading}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        {loading ? 'Cancelling...' : 'Cancel Request'}
+      </motion.button>
     )
   }
 
   if (existing?.status === 'rejected') {
-    return <span className="badge badge-error">Request declined</span>
+    return (
+      <motion.span
+        className="badge badge-error"
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+      >
+        Request declined
+      </motion.span>
+    )
   }
 
   if (!isOpen) {
-    return <span className="badge">{ride.status === 'completed' ? 'Completed' : 'In Progress'}</span>
+    return (
+      <motion.span
+        className="badge"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        {ride.status === 'completed' ? 'Completed' : 'In Progress'}
+      </motion.span>
+    )
   }
 
   if (isFull) {
-    return <span className="badge badge-error">Fully Booked</span>
+    return (
+      <motion.span
+        className="badge badge-error"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+      >
+        Fully Booked
+      </motion.span>
+    )
   }
 
   return (
-    <button className="btn-primary" onClick={handleRequest} disabled={loading}>
-      {loading ? 'Sending...' : 'Request Seat'}
-    </button>
+    <motion.button
+      className="btn-primary"
+      onClick={handleRequest}
+      disabled={loading}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      {loading ? (
+        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <span className="spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'white' }} />
+          Sending...
+        </span>
+      ) : 'Request Seat'}
+    </motion.button>
   )
 }

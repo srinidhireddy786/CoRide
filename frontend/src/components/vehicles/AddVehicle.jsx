@@ -1,11 +1,15 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { api } from '../../lib/api'
-import { useAuth } from '../../contexts/AuthContext'
+
+const fieldVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: (i) => ({ opacity: 1, y: 0, transition: { duration: 0.3, delay: i * 0.05 } }),
+}
 
 export default function AddVehicle({ onSaved, onSkip }) {
-  const { user } = useAuth()
-  const [form, setForm] = useState({ type: 'car', brand: '', model: '', registration_number: '', seat_capacity: 4 })
+  const [form, setForm] = useState({ type: 'car', brand: '', model: '', reg_no: '', seat_capacity: 4 })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -16,82 +20,130 @@ export default function AddVehicle({ onSaved, onSkip }) {
     e.preventDefault()
     setError('')
 
-    if (!form.brand.trim() || !form.model.trim() || !form.registration_number.trim()) {
-      setError('Please fill in all fields.')
-      return
+    const { brand, model, reg_no } = form
+    if (!brand.trim() || !model.trim() || !reg_no.trim()) {
+      return setError('Brand, model and registration number are required.')
     }
 
     setLoading(true)
     try {
       await api.post('/api/vehicles', {
         type: form.type,
-        brand: form.brand.trim(),
-        model: form.model.trim(),
-        registration_number: form.registration_number.trim(),
+        brand: brand.trim(),
+        model: model.trim(),
+        registration_number: reg_no.trim().toUpperCase(),
         seat_capacity: form.seat_capacity,
       })
+      toast.success('Vehicle added!')
+      onSaved?.()
     } catch (err) {
-      setLoading(false)
-      return setError(err.message)
+      setError(err.message)
     }
     setLoading(false)
-
-    toast.success('Vehicle added!')
-    onSaved?.()
   }
 
-  return (
-    <div className="vehicle-form-container">
-      <h2>Add Your Vehicle</h2>
-      <p className="subtitle">One-time setup to start offering rides</p>
+  const fields = [
+    { field: 'brand', label: 'Brand', placeholder: 'e.g. Maruti Suzuki', type: 'text', i: 0 },
+    { field: 'model', label: 'Model', placeholder: 'e.g. Swift', type: 'text', i: 1 },
+    { field: 'reg_no', label: 'Registration Number', placeholder: 'e.g. TS 01 AB 1234', type: 'text', i: 2 },
+  ]
 
-      {error && <div className="error-box">{error}</div>}
+  return (
+    <motion.div
+      className="vehicle-form-container"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <h2>Add a Vehicle</h2>
+      <p className="subtitle">You need a vehicle to offer rides</p>
+
+      {error && (
+        <motion.div
+          className="error-box"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          {error}
+        </motion.div>
+      )}
 
       <form onSubmit={handleSubmit} noValidate>
-        <label>
-          Vehicle Type
-          <select value={form.type} onChange={update('type')}>
-            <option value="car">Car</option>
-            <option value="suv">SUV</option>
-            <option value="bike">Bike</option>
-          </select>
-        </label>
+        {fields.map(({ field, label, placeholder, type, i }) => (
+          <motion.label
+            key={field}
+            custom={i}
+            variants={fieldVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {label}
+            <input
+              type={type}
+              value={form[field]}
+              onChange={update(field)}
+              placeholder={placeholder}
+            />
+          </motion.label>
+        ))}
 
-        <label>
-          Brand
-          <input type="text" value={form.brand} onChange={update('brand')} placeholder="e.g. Maruti, Honda" />
-        </label>
+        <div className="form-row">
+          <motion.label
+            custom={3}
+            variants={fieldVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            Type
+            <select value={form.type} onChange={update('type')}>
+              <option value="car">Car</option>
+              <option value="suv">SUV</option>
+              <option value="bike">Bike</option>
+            </select>
+          </motion.label>
+          <motion.label
+            custom={4}
+            variants={fieldVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            Seats
+            <select value={form.seat_capacity} onChange={updateNum('seat_capacity')}>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </motion.label>
+        </div>
 
-        <label>
-          Model
-          <input type="text" value={form.model} onChange={update('model')} placeholder="e.g. Swift, City" />
-        </label>
-
-        <label>
-          Registration Number
-          <input type="text" value={form.registration_number} onChange={update('registration_number')} placeholder="e.g. MH01AB1234" />
-        </label>
-
-        <label>
-          Seats (excluding driver)
-          <select value={form.seat_capacity} onChange={updateNum('seat_capacity')}>
-            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-        </label>
-
-        <div className="btn-row">
+        <motion.div
+          className="btn-row"
+          custom={5}
+          variants={fieldVariants}
+          initial="hidden"
+          animate="visible"
+        >
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Saving...' : 'Save Vehicle'}
+            {loading ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <span className="spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'white' }} />
+                Adding...
+              </span>
+            ) : 'Add Vehicle'}
           </button>
           {onSkip && (
-            <button type="button" className="btn-secondary" onClick={onSkip}>
+            <motion.button
+              type="button"
+              className="btn-secondary"
+              onClick={onSkip}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
               Skip
-            </button>
+            </motion.button>
           )}
-        </div>
+        </motion.div>
       </form>
-    </div>
+    </motion.div>
   )
 }

@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { api } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
 import { geocodeWithRetry } from '../../lib/geocode'
 import { getDistance } from '../../lib/osrm'
 import { POPULAR_ROUTES } from '../../lib/hyderabad'
+
+const fieldVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: (i) => ({ opacity: 1, y: 0, transition: { duration: 0.3, delay: i * 0.05 } }),
+}
 
 export default function PublishRide() {
   const { user } = useAuth()
@@ -89,49 +95,106 @@ export default function PublishRide() {
 
   if (!vehicles.length) {
     return (
-      <div className="empty-state">
+      <motion.div
+        className="empty-state"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
         <h2>No vehicle registered</h2>
         <p>Add a vehicle first to publish a ride.</p>
-      </div>
+      </motion.div>
     )
   }
 
-  return (
-    <div className="form-container">
-      <h2>Offer a Ride</h2>
-      <p className="subtitle">Publish your trip details</p>
+  const fields = [
+    { field: 'from_city', label: 'From', placeholder: 'e.g. Gachibowli', type: 'text', i: 0 },
+    { field: 'to_city', label: 'To', placeholder: 'e.g. HITEC City', type: 'text', i: 1 },
+  ]
 
-      {error && <div className="error-box">{error}</div>}
+  return (
+    <motion.div
+      className="form-container"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.h2
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+      >
+        Offer a Ride
+      </motion.h2>
+      <motion.p
+        className="subtitle"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.15 }}
+      >
+        Publish your trip details
+      </motion.p>
+
+      {error && (
+        <motion.div
+          className="error-box"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          {error}
+        </motion.div>
+      )}
 
       <form onSubmit={handleSubmit} noValidate>
         <div className="form-row">
-          <label>
-            From
-            <input type="text" value={form.from_city} onChange={update('from_city')} placeholder="e.g. Gachibowli" />
-          </label>
-          <label>
-            To
-            <input type="text" value={form.to_city} onChange={update('to_city')} placeholder="e.g. HITEC City" />
-          </label>
+          {fields.map(({ field, label, placeholder, type, i }) => (
+            <motion.label
+              key={field}
+              custom={i}
+              variants={fieldVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {label}
+              <input
+                type={type}
+                value={form[field]}
+                onChange={update(field)}
+                placeholder={placeholder}
+              />
+            </motion.label>
+          ))}
         </div>
 
-        <div className="quick-routes">
+        <motion.div
+          className="quick-routes"
+          custom={2}
+          variants={fieldVariants}
+          initial="hidden"
+          animate="visible"
+        >
           <p className="hint">Popular routes</p>
           <div className="route-chips">
             {POPULAR_ROUTES.slice(0, 6).map((r, i) => (
-              <button
+              <motion.button
                 key={i}
                 type="button"
                 className={`route-chip ${form.from_city === r.from && form.to_city === r.to ? 'active' : ''}`}
                 onClick={() => selectRoute(r.from, r.to)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 {r.from} → {r.to}
-              </button>
+              </motion.button>
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        <label>
+        <motion.label
+          custom={3}
+          variants={fieldVariants}
+          initial="hidden"
+          animate="visible"
+        >
           Vehicle
           <select value={form.vehicle_id} onChange={update('vehicle_id')}>
             {vehicles.map((v) => (
@@ -140,32 +203,59 @@ export default function PublishRide() {
               </option>
             ))}
           </select>
-        </label>
+        </motion.label>
 
-        <label>
+        <motion.label
+          custom={4}
+          variants={fieldVariants}
+          initial="hidden"
+          animate="visible"
+        >
           Departure Time
           <input type="datetime-local" value={form.departure_time} onChange={update('departure_time')} />
-        </label>
+        </motion.label>
 
         <div className="form-row">
-          <label>
+          <motion.label
+            custom={5}
+            variants={fieldVariants}
+            initial="hidden"
+            animate="visible"
+          >
             Available Seats
             <select value={form.total_seats} onChange={updateNum('total_seats')}>
               {Array.from({ length: 7 }, (_, i) => i + 1).map((n) => (
                 <option key={n} value={n}>{n}</option>
               ))}
             </select>
-          </label>
-          <label>
+          </motion.label>
+          <motion.label
+            custom={6}
+            variants={fieldVariants}
+            initial="hidden"
+            animate="visible"
+          >
             Cost per Seat (₹)
             <input type="number" min="0" value={form.final_cost} onChange={update('final_cost')} placeholder="e.g. 50" />
-          </label>
+          </motion.label>
         </div>
 
-        <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? 'Publishing...' : 'Publish Ride'}
-        </button>
+        <motion.div
+          custom={7}
+          variants={fieldVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <span className="spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'white' }} />
+                Publishing...
+              </span>
+            ) : 'Publish Ride'}
+          </button>
+        </motion.div>
       </form>
-    </div>
+    </motion.div>
   )
 }

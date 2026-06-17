@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { login } from '../../lib/auth'
 import { useAuth } from '../../contexts/AuthContext'
@@ -36,13 +37,46 @@ export default function Login() {
 
   return (
     <div className="auth-page">
-      <form className="auth-form" onSubmit={handleSubmit} noValidate>
-        <h1>Welcome Back</h1>
-        <p className="subtitle">Log in to CoRide</p>
+      <motion.form
+        className="auth-form"
+        onSubmit={handleSubmit}
+        noValidate
+        initial={{ opacity: 0, scale: 0.92 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
+        <motion.h1
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          Welcome Back
+        </motion.h1>
+        <motion.p
+          className="subtitle"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+        >
+          Log in to CoRide
+        </motion.p>
 
-        {error && <div className="error-box">{error}</div>}
+        {error && (
+          <motion.div
+            className="error-box"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: 'spring', stiffness: 300 }}
+          >
+            {error}
+          </motion.div>
+        )}
 
-        <label>
+        <motion.label
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
           Email
           <input
             type="email"
@@ -51,9 +85,13 @@ export default function Login() {
             placeholder="you@example.com"
             autoComplete="email"
           />
-        </label>
+        </motion.label>
 
-        <label>
+        <motion.label
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
           Password
           <input
             type="password"
@@ -62,16 +100,32 @@ export default function Login() {
             placeholder="Enter your password"
             autoComplete="current-password"
           />
-        </label>
+        </motion.label>
 
-        <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? 'Logging in...' : 'Log In'}
-        </button>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <span className="spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'white' }} />
+                Logging in...
+              </span>
+            ) : 'Log In'}
+          </button>
+        </motion.div>
 
-        <p className="auth-link">
+        <motion.p
+          className="auth-link"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.35 }}
+        >
           Don't have an account? <Link to="/register">Sign up</Link>
-        </p>
-      </form>
+        </motion.p>
+      </motion.form>
     </div>
   )
 }

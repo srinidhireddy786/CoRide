@@ -1,5 +1,6 @@
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet'
 import L from 'leaflet'
+import { motion } from 'framer-motion'
 import { HYDERABAD_CENTER } from '../../lib/hyderabad'
 
 delete L.Icon.Default.prototype._getIconUrl
@@ -9,6 +10,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
+const pulseIcon = L.divIcon({
+  className: '',
+  html: '<div class="marker-pulse"></div>',
+  iconSize: [12, 12],
+  iconAnchor: [6, 6],
+})
+
 export default function RouteMap({ from, to, driverLocation, height = '300px' }) {
   const hasCoords = from?.lat && from?.lng && to?.lat && to?.lng
   const center = hasCoords
@@ -16,7 +24,12 @@ export default function RouteMap({ from, to, driverLocation, height = '300px' })
     : HYDERABAD_CENTER
 
   return (
-    <div style={{ height, width: '100%', borderRadius: 8, overflow: 'hidden' }}>
+    <motion.div
+      style={{ height, width: '100%', borderRadius: 8, overflow: 'hidden' }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <MapContainer center={center} zoom={hasCoords ? 11 : 12} style={{ height: '100%', width: '100%' }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -44,11 +57,11 @@ export default function RouteMap({ from, to, driverLocation, height = '300px' })
         )}
 
         {driverLocation && (
-          <Marker position={[driverLocation.lat, driverLocation.lng]}>
+          <Marker position={[driverLocation.lat, driverLocation.lng]} icon={pulseIcon}>
             <Popup>Driver is here</Popup>
           </Marker>
         )}
       </MapContainer>
-    </div>
+    </motion.div>
   )
 }

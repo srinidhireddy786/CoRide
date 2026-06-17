@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import uuid
 import jwt
 from passlib.context import CryptContext
 from fastapi import Header, HTTPException
@@ -32,4 +33,4 @@ async def get_current_user(authorization: str = Header(None)):
         raise HTTPException(status_code=401, detail="Not authenticated")
     token = authorization.split(" ")[1]
     payload = decode_token(token)
-    return payload["sub"]
+    return uuid.UUID(payload["sub"])
