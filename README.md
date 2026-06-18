@@ -3,8 +3,8 @@
 This project is currently just a basic base to build upon. It contains foundational frontend and backend structures for a ride-sharing application, but is meant to be extended and refined.
 
 ## Tech Stack
-- Frontend: React + Vite + TailwindCSS
-- Backend: FastAPI (Python)
+- Frontend:React+Vite +TailwindCSS
+- Backend:FastAPI(Python)
 - Database: PostgreSQL (via asyncpg)
 
 ## Getting Started
