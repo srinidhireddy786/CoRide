@@ -3,6 +3,8 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import AddVehicle from '../components/vehicles/AddVehicle'
+import { geocodeWithRetry } from '../lib/geocode'
+import { getDistance } from '../lib/osrm'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -65,17 +67,30 @@ export default function OfferRide() {
 
     setSaving(true)
     try {
+      const [fromCoord, toCoord] = await Promise.all([
+        geocodeWithRetry(form.from_city.trim()),
+        geocodeWithRetry(form.to_city.trim()),
+      ])
+
+      const distanceKm = await getDistance(
+        fromCoord.lng,
+        fromCoord.lat,
+        toCoord.lng,
+        toCoord.lat
+      ).catch(() => null)
+
       await api.post('/api/rides', {
         from_city: form.from_city.trim(),
         to_city: form.to_city.trim(),
-        from_lat: 17.44,
-        from_lng: 78.38,
-        to_lat: 17.41,
-        to_lng: 78.35,
+        from_lat: fromCoord.lat,
+        from_lng: fromCoord.lng,
+        to_lat: toCoord.lat,
+        to_lng: toCoord.lng,
         departure_time: departureTime,
         total_seats: parseInt(form.total_seats),
         final_cost: parseFloat(form.final_cost),
         vehicle_id: form.vehicle_id,
+        distance_km: distanceKm ? Number(distanceKm.toFixed(1)) : null,
       })
       navigate('/my-rides')
     } catch (err) {

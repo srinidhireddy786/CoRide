@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../lib/api'
-import RouteMap from '../components/maps/RouteMap'
+import { formatRideDateTime } from '../lib/rideDisplay'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -26,7 +26,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [activeRides, setActiveRides] = useState([])
 
-  const firstName = user?.name?.split(' ')[0] || 'James'
+  const firstName = user?.name?.split(' ')[0] || 'there'
 
   useEffect(() => {
     Promise.all([
@@ -139,13 +139,9 @@ export default function Dashboard() {
                     animate="visible"
                   >
                     <div className="dash-active-route">
-                      <span className="dash-active-cities">{ride.from_city} → {ride.to_city}</span>
+                      <span className="dash-active-cities">{ride.from_city} to {ride.to_city}</span>
                       <span className="dash-active-time">
-                        {ride.departure_time
-                          ? new Date(ride.departure_time).toLocaleString('en-IN', {
-                              weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                            })
-                          : ''}
+                        {formatRideDateTime(ride.departure_time)}
                       </span>
                     </div>
                     <motion.button
@@ -176,11 +172,6 @@ export default function Dashboard() {
                 </h2>
               </div>
               <div className="dash-commute-placeholder">
-                <RouteMap
-                  from={{ lat: 17.4483, lng: 78.3915 }}
-                  to={{ lat: 17.4283, lng: 78.3485 }}
-                  height={220}
-                />
                 <div className="dash-commute-placeholder-overlay">
                   <span className="material-symbols-outlined">route</span>
                   <h3>Plan your next ride</h3>

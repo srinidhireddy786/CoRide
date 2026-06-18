@@ -69,7 +69,7 @@ export default function Register() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.6 }}
             >
-              Elevate your daily commute.
+              Elevate Your Daily Commute
             </motion.h1>
             <motion.p
               className="auth-left-sub"
@@ -162,7 +162,7 @@ export default function Register() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Password"
                   autoComplete="new-password"
                 />
                 <button

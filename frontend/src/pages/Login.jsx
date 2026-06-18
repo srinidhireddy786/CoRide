@@ -70,18 +70,6 @@ export default function Login() {
             </motion.p>
           </div>
 
-          <motion.div
-            className="auth-avatar-row"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            <div className="auth-avatar-group">
-              <div className="auth-avatar-circle" style={{ background: '#e0e7ff' }}>JD</div>
-              <div className="auth-avatar-circle" style={{ background: '#dbeafe' }}>RK</div>
-              <div className="auth-avatar-circle" style={{ background: '#fce7f3' }}>SP</div>
-            </div>
-          </motion.div>
         </div>
       </div>
 
@@ -134,7 +122,7 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Password"
                   autoComplete="current-password"
                 />
                 <button
@@ -162,13 +150,6 @@ export default function Login() {
                 </span>
                 <span className="auth-checkbox-label">Remember me</span>
               </label>
-              <button
-                type="button"
-                className="auth-forgot"
-                onClick={() => navigate('/forgot-password')}
-              >
-                Forgot password?
-              </button>
             </div>
 
             <button type="submit" className="auth-submit" disabled={loading}>

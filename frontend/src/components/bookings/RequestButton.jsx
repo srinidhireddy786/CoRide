@@ -64,7 +64,7 @@ export default function RequestButton({ ride, onUpdate }) {
         animate={{ scale: 1 }}
         transition={{ type: 'spring', stiffness: 400 }}
       >
-        You're in! ✓
+        You're In
       </motion.span>
     )
   }

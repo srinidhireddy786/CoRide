@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
+import { formatRideDateTime, formatVehicleName, getDriverName, getInitials, getStatusLabel } from '../lib/rideDisplay'
 
 const rideVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -21,8 +22,8 @@ export default function MyRides() {
 
   useEffect(() => {
     Promise.all([
-      api.get('/api/rides/my').then((d) => setOffered(d || [])).catch(() => {}),
-      api.get('/api/rides/joined').then((d) => setJoined(d || [])).catch(() => {}),
+      api.get('/api/rides/my').then((d) => setOffered((d || []).map((ride) => ({ ...ride, user_role: 'Driver' })))).catch(() => {}),
+      api.get('/api/rides/joined').then((d) => setJoined((d || []).map((ride) => ({ ...ride, user_role: 'Passenger' })))).catch(() => {}),
     ]).finally(() => setLoading(false))
   }, [])
 
@@ -100,20 +101,12 @@ export default function MyRides() {
                   <div className="rides-card-inner">
                     <div className="rides-route-col">
                       <div className="rides-badge-row">
-                        <span className={`rides-badge ${ride.status === 'confirmed' ? 'confirmed' : 'pending'}`}>
-                          {ride.status === 'confirmed' ? 'Confirmed' : 'Pending Confirmation'}
+                        <span className={`rides-badge ${ride.booking_status === 'accepted' ? 'confirmed' : 'pending'}`}>
+                          {getStatusLabel(ride.status, ride.booking_status)}
                         </span>
                         <span className="rides-date">
                           <span className="material-symbols-outlined" style={{ fontSize: 18 }}>calendar_today</span>
-                          {new Date(ride.departure_time || Date.now()).toLocaleDateString('en-US', {
-                            weekday: 'short',
-                            month: 'short',
-                            day: 'numeric',
-                          })}{' '}
-                          {new Date(ride.departure_time || Date.now()).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {formatRideDateTime(ride.departure_time)}
                         </span>
                       </div>
 
@@ -121,15 +114,15 @@ export default function MyRides() {
                         <div className="rides-route-item">
                           <div className="rides-route-dot pickup"></div>
                           <div>
-                            <p className="rides-location-name">{ride.from_city || 'Knowledge City, Hitech City'}</p>
-                            <p className="rides-location-sub">Office Entrance, Tower A</p>
+                            <p className="rides-location-name">{ride.from_city}</p>
+                            <p className="rides-location-sub">Pickup</p>
                           </div>
                         </div>
                         <div className="rides-route-item">
                           <div className="rides-route-dot dropoff"></div>
                           <div>
-                            <p className="rides-location-name">{ride.to_city || 'Financial District, Gachibowli'}</p>
-                            <p className="rides-location-sub">Gate 3, Corporate Park</p>
+                            <p className="rides-location-name">{ride.to_city}</p>
+                            <p className="rides-location-sub">Drop-off</p>
                           </div>
                         </div>
                       </div>
@@ -140,23 +133,21 @@ export default function MyRides() {
                         <div className="rides-driver">
                           <div className="rides-driver-avatar-wrap">
                             <div className="rides-driver-avatar">
-                              {ride.owner_name
-                                ? ride.owner_name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
-                                : 'RK'}
+                              {getInitials(getDriverName(ride))}
                             </div>
-                            {ride.status === 'confirmed' && <div className="rides-avatar-pulse"></div>}
+                            {(ride.booking_status === 'accepted' || ride.status === 'in_progress') && <div className="rides-avatar-pulse"></div>}
                           </div>
                           <div>
-                            <span className="rides-role-label">Your Driver</span>
-                            <p className="rides-driver-name">{ride.owner_name || 'Rajesh Kumar'}</p>
+                            <span className="rides-role-label">{ride.user_role === 'Driver' ? 'You are driving' : 'Your driver'}</span>
+                            <p className="rides-driver-name">{getDriverName(ride)}</p>
 
                           </div>
                         </div>
                         <div className="rides-action-block">
                           <div className="rides-vehicle-info">
                             <span className="rides-vehicle-label">Vehicle</span>
-                            <p className="rides-vehicle-name">{ride.vehicle_name || 'Audi e-tron GT'}</p>
-                            <p className="rides-vehicle-plate">{ride.vehicle_plate || 'TS 09 EL 2024'}</p>
+                            <p className="rides-vehicle-name">{formatVehicleName(ride)}</p>
+                            {ride.vehicle_plate && <p className="rides-vehicle-plate">{ride.vehicle_plate}</p>}
                           </div>
                           <button
                             className="rides-action-btn"
@@ -208,29 +199,22 @@ export default function MyRides() {
                       >
                         <td>
                           <p className="rides-td-primary">
-                            {new Date(ride.departure_time || Date.now()).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })}
+                            {formatRideDateTime(ride.departure_time)}
                           </p>
                           <p className="rides-td-secondary">
-                            {new Date(ride.departure_time || Date.now()).toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
+                            {getStatusLabel(ride.status, ride.booking_status)}
                           </p>
                         </td>
                         <td>
                           <div className="rides-route-pair">
-                            <span>{ride.from_city || 'Financial Dist.'}</span>
+                            <span>{ride.from_city}</span>
                             <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--outline)' }}>east</span>
-                            <span>{ride.to_city || 'Banjara Hills'}</span>
+                            <span>{ride.to_city}</span>
                           </div>
                         </td>
                         <td>
                           <span className="rides-role-badge">
-                            {ride.role || 'Driver'}
+                            {ride.user_role || 'Passenger'}
                           </span>
                         </td>
                         <td>
