@@ -5,10 +5,6 @@ import { MessageCircle } from 'lucide-react'
 
 export default function RideCard({ ride, index = 0 }) {
   const navigate = useNavigate()
-  const rating = ride.owner_avg_rating
-    ? `★ ${Number(ride.owner_avg_rating).toFixed(1)}`
-    : '★ New'
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -41,7 +37,6 @@ export default function RideCard({ ride, index = 0 }) {
           <span className="ride-seats">
             {ride.available_seats} / {ride.total_seats} seats
           </span>
-          <span className="ride-rating">{rating}</span>
           <motion.button
             className="chat-icon-btn"
             onClick={(e) => {

@@ -1,146 +1,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Car, MapPin, MessageCircle, Navigation, Users, Star, TrendingUp, Shield } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { POPULAR_ROUTES } from '../lib/hyderabad'
 import useScrollReveal from '../hooks/useScrollReveal'
-
-function SearchIcon({ size = 24 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  )
-}
-
-const FEATURES = [
-  { icon: Car, gradient: 'purple', title: 'Offer a Ride', desc: 'Publish your trip route and earn while helping others reach their destination.' },
-  { icon: SearchIcon, gradient: 'blue', title: 'Find a Ride', desc: 'Search for rides heading your way and book a seat instantly.' },
-  { icon: Navigation, gradient: 'green', title: 'Live Tracking', desc: 'Track your ride in real-time with GPS location sharing.' },
-  { icon: MessageCircle, gradient: 'orange', title: 'In-App Chat', desc: 'Stay connected with your driver or passengers via built-in chat.' },
-]
-
-const TESTIMONIALS = [
-  { name: 'Priya S.', role: 'Regular Rider', text: 'CoRide has made my daily commute so much easier and affordable. Love the live tracking feature!', rating: 5 },
-  { name: 'Rahul K.', role: 'Frequent Driver', text: 'I\'ve been offering rides for months. Great way to meet new people and share costs.', rating: 5 },
-  { name: 'Ananya M.', role: 'College Student', text: 'Safe, reliable, and super convenient. The chat feature helps coordinate pickups easily.', rating: 5 },
-  { name: 'Vikram R.', role: 'Daily Commuter', text: 'Best carpooling app in Hyderabad! The route matching is always accurate.', rating: 5 },
-]
-
-const STATS = [
-  { icon: Users, value: 10, suffix: 'K+', label: 'Active Riders' },
-  { icon: MapPin, value: 50, suffix: '+', label: 'Cities Covered' },
-  { icon: TrendingUp, value: 25, suffix: 'K+', label: 'Rides Completed' },
-  { icon: Star, value: 4.8, suffix: '', label: 'Average Rating' },
-  { icon: Shield, value: 100, suffix: '%', label: 'Safe Rides' },
-]
-
-function AnimatedCounter({ target, suffix, isVisible }) {
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    if (!isVisible) return
-    let start = 0
-    const duration = 2000
-    const step = Math.max(1, Math.floor(target / (duration / 16)))
-
-    const timer = setInterval(() => {
-      start += step
-      if (start >= target) {
-        setCount(target)
-        clearInterval(timer)
-      } else {
-        setCount(start)
-      }
-    }, 16)
-
-    return () => clearInterval(timer)
-  }, [target, isVisible])
-
-  return <>{count}{suffix}</>
-}
-
-function StatItem({ icon: Icon, value, suffix, label }) {
-  const [ref, isVisible] = useScrollReveal()
-
-  return (
-    <div ref={ref} className="stat-item">
-      <div className="stat-icon"><Icon size={28} /></div>
-      <div className="stat-number">
-        <AnimatedCounter target={value} suffix={suffix} isVisible={isVisible} />
-      </div>
-      <div className="stat-label">{label}</div>
-    </div>
-  )
-}
-
-function FeatureCard({ icon: Icon, gradient, title, desc, index }) {
-  const [ref, isVisible] = useScrollReveal()
-
-  return (
-    <motion.div
-      ref={ref}
-      className="feature-card"
-      initial={{ opacity: 0, y: 40 }}
-      animate={isVisible ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay: index * 0.12, ease: 'easeOut' }}
-    >
-      <div className={`feature-icon ${gradient}`}>
-        <Icon size={24} />
-      </div>
-      <h3>{title}</h3>
-      <p>{desc}</p>
-    </motion.div>
-  )
-}
-
-function TestimonialCard({ name, role, text, rating, index }) {
-  const [ref, isVisible] = useScrollReveal()
-
-  return (
-    <motion.div
-      ref={ref}
-      className="testimonial-card"
-      initial={{ opacity: 0, y: 30 }}
-      animate={isVisible ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay: index * 0.1, ease: 'easeOut' }}
-    >
-      <div className="testimonial-stars">{'★'.repeat(rating)}</div>
-      <p className="testimonial-text">"{text}"</p>
-      <div className="testimonial-author">
-        <div className="testimonial-avatar">{name.charAt(0)}</div>
-        <div>
-          <div className="testimonial-name">{name}</div>
-          <div className="testimonial-role">{role}</div>
-        </div>
-      </div>
-    </motion.div>
-  )
-}
-
-function RouteCard({ route, index }) {
-  const [ref, isVisible] = useScrollReveal()
-
-  return (
-    <motion.div
-      ref={ref}
-      className="route-card"
-      initial={{ opacity: 0, x: -20 }}
-      animate={isVisible ? { opacity: 1, x: 0 } : {}}
-      transition={{ duration: 0.4, delay: index * 0.06, ease: 'easeOut' }}
-    >
-      <div className="route-card-icon">
-        <MapPin size={20} />
-      </div>
-      <div className="route-card-info">
-        <h4>{route.from} → {route.to}</h4>
-        <p>via Hyderabad</p>
-      </div>
-    </motion.div>
-  )
-}
 
 function SectionLabel({ children }) {
   const [ref, isVisible] = useScrollReveal()
@@ -157,175 +20,6 @@ function SectionLabel({ children }) {
   )
 }
 
-function FeaturesSection() {
-  const [ref, isVisible] = useScrollReveal()
-
-  return (
-    <div className="section" id="features">
-      <motion.div
-        ref={ref}
-        initial={{ opacity: 0, y: 20 }}
-        animate={isVisible ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.5 }}
-      >
-        <SectionLabel>Features</SectionLabel>
-        <h2>Everything you need for <span className="gradient-text">smart travel</span></h2>
-        <p className="section-desc">
-          From finding rides to live tracking, CoRide makes carpooling seamless and safe.
-        </p>
-      </motion.div>
-      <div className="features-grid">
-        {FEATURES.map((f, i) => (
-          <FeatureCard key={i} {...f} index={i} />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function StatsSection() {
-  const [ref, isVisible] = useScrollReveal({ threshold: 0.3 })
-
-  return (
-    <div className="stats-section" ref={ref}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={isVisible ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.5 }}
-      >
-        <SectionLabel>Our Impact</SectionLabel>
-        <h2>Growing stronger every day</h2>
-        <p className="section-desc" style={{ margin: '0 auto', color: 'rgba(255,255,255,0.6)' }}>
-          Join thousands of happy riders and drivers across Hyderabad.
-        </p>
-      </motion.div>
-      <div className="stats-grid">
-        {STATS.map((s, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 20 }}
-            animate={isVisible ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.4, delay: i * 0.1 }}
-          >
-            <StatItem {...s} />
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function RoutesSection() {
-  const [ref, isVisible] = useScrollReveal()
-
-  return (
-    <div className="section" id="routes">
-      <motion.div
-        ref={ref}
-        initial={{ opacity: 0, y: 20 }}
-        animate={isVisible ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.5 }}
-      >
-        <SectionLabel>Popular Routes</SectionLabel>
-        <h2>Explore <span className="gradient-text">Hyderabad</span> routes</h2>
-        <p className="section-desc">
-          Frequently traveled routes in the city. Pick one and start your journey.
-        </p>
-      </motion.div>
-      <div className="routes-grid">
-        {POPULAR_ROUTES.slice(0, 9).map((r, i) => (
-          <RouteCard key={i} route={r} index={i} />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function TestimonialsSection() {
-  const [ref, isVisible] = useScrollReveal()
-
-  return (
-    <div className="section" id="testimonials">
-      <motion.div
-        ref={ref}
-        initial={{ opacity: 0, y: 20 }}
-        animate={isVisible ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.5 }}
-      >
-        <SectionLabel>Testimonials</SectionLabel>
-        <h2>What our <span className="gradient-text">riders</span> say</h2>
-        <p className="section-desc">
-          Real experiences from the CoRide community.
-        </p>
-      </motion.div>
-      <div className="testimonials-grid">
-        {TESTIMONIALS.map((t, i) => (
-          <TestimonialCard key={i} {...t} index={i} />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function CTASection() {
-  const [ref, isVisible] = useScrollReveal({ threshold: 0.3 })
-
-  return (
-    <div className="cta-section" ref={ref}>
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={isVisible ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.6 }}
-      >
-        <h2>Ready to ride together?</h2>
-        <p>Join CoRide today and make your travel smarter, cheaper, and more social.</p>
-        <div className="cta-btns">
-          <Link to="/register" className="landing-btn-primary" style={{ padding: '14px 36px', fontSize: '1rem' }}>
-            Get Started Free
-          </Link>
-          <Link to="/login" className="landing-btn-secondary" style={{ padding: '14px 36px', fontSize: '1rem' }}>
-            Sign In
-          </Link>
-        </div>
-      </motion.div>
-    </div>
-  )
-}
-
-function Footer() {
-  return (
-    <footer className="landing-footer">
-      <div className="footer-inner">
-        <div className="footer-brand">
-          <h3>CoRide</h3>
-          <p>Making Hyderabad commute smarter, cheaper, and more social. Ride together, save together.</p>
-        </div>
-        <div className="footer-col">
-          <h4>Quick Links</h4>
-          <a href="#features">Features</a>
-          <a href="#routes">Routes</a>
-          <a href="#testimonials">Testimonials</a>
-        </div>
-        <div className="footer-col">
-          <h4>Support</h4>
-          <a href="#">Help Center</a>
-          <a href="#">Safety</a>
-          <a href="#">Contact</a>
-        </div>
-        <div className="footer-col">
-          <h4>Legal</h4>
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-        </div>
-      </div>
-      <div className="footer-bottom">
-        <span>© 2026 CoRide. All rights reserved.</span>
-        <span>Made with ❤️ in Hyderabad</span>
-      </div>
-    </footer>
-  )
-}
-
 function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
 
@@ -338,101 +32,421 @@ function LandingPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [handleScroll])
 
+  const [heroRef, heroVisible] = useScrollReveal({ threshold: 0.1 })
+  const [overviewRef, overviewVisible] = useScrollReveal({ threshold: 0.1 })
+  const [featuresRef, featuresVisible] = useScrollReveal({ threshold: 0.1 })
+  const [trackingRef, trackingVisible] = useScrollReveal({ threshold: 0.1 })
+  const [routesRef, routesVisible] = useScrollReveal({ threshold: 0.1 })
+  const [stepsRef, stepsVisible] = useScrollReveal({ threshold: 0.1 })
+  const [visionRef, visionVisible] = useScrollReveal({ threshold: 0.1 })
+  const [ctaRef, ctaVisible] = useScrollReveal({ threshold: 0.1 })
+
   return (
     <div className="landing">
       <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
-        <span className="landing-logo">CoRide</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span className="material-symbols-outlined" style={{ color: 'var(--primary)', fontSize: 28, fontVariationSettings: "'FILL' 1" }}>directions_car</span>
+          <span className="landing-logo">CoRide</span>
+        </div>
         <div className="landing-nav-links">
           <a href="#features">Features</a>
           <a href="#routes">Routes</a>
-          <a href="#testimonials">Reviews</a>
-          <Link to="/login" className="landing-btn-primary">Get Started</Link>
+          <a href="#tracking">Tracking</a>
+          <Link to="/login" className="landing-btn-secondary">Login</Link>
+          <Link to="/register" className="landing-btn-primary">Join CoRide</Link>
         </div>
       </nav>
 
-      <section className="hero">
-        <div className="hero-bg-shapes">
-          <div className="hero-shape hero-shape-1" />
-          <div className="hero-shape hero-shape-2" />
-          <div className="hero-shape hero-shape-3" />
+      {/* Hero */}
+      <header className="hero" ref={heroRef}>
+        <div className="hero-bg">
+          <div className="hero-overlay" />
+          <img src="/images/hero-bg.jpg" alt="Hyderabad Cityscape" className="hero-bg-img" />
         </div>
+        <div className="hero-content">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={heroVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+          >
+            <span className="hero-tag">
+              <span className="hero-tag-dot" />
+              Now Live in Hyderabad
+            </span>
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 40 }}
+            animate={heroVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.15 }}
+          >
+            Ride Together,<br /><span className="text-primary">Save Together</span>
+          </motion.h1>
+          <motion.p
+            className="hero-subtitle"
+            initial={{ opacity: 0, y: 30 }}
+            animate={heroVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            The premium ride-sharing community designed exclusively for Hyderabad's professionals. Connect with colleagues and commute in comfort.
+          </motion.p>
+          <motion.div
+            className="hero-btns"
+            initial={{ opacity: 0, y: 20 }}
+            animate={heroVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.45 }}
+          >
+            <Link to="/register" className="landing-btn-primary hero-btn-primary">
+              <span className="material-symbols-outlined">search</span>
+              Find a Ride
+            </Link>
+            <Link to="/register" className="landing-btn-secondary hero-btn-secondary">
+              <span className="material-symbols-outlined">add_circle</span>
+              Offer a Ride
+            </Link>
+          </motion.div>
+        </div>
+      </header>
 
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-        >
-          <div className="hero-tag">
-            <span className="hero-tag-dot" />
-            Now Available in Hyderabad
+      {/* Overview: What is CoRide? */}
+      <section className="section-overview" ref={overviewRef}>
+        <div className="section-overview-inner">
+          <motion.div
+            className="overview-header"
+            initial={{ opacity: 0, y: 20 }}
+            animate={overviewVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5 }}
+          >
+            <h2>What is CoRide?</h2>
+            <p>We bridge the gap between solo commutes and crowded public transport by connecting car owners with empty seats to verified professional passengers.</p>
+          </motion.div>
+          <div className="overview-grid">
+            <motion.div
+              className="overview-card"
+              initial={{ opacity: 0, x: -30 }}
+              animate={overviewVisible ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <div className="overview-card-img">
+                <img src="/images/driver.jpg" alt="Professional Driver" />
+              </div>
+              <div className="overview-card-body">
+                <div className="overview-card-icon">
+                  <span className="material-symbols-outlined">drive_eta</span>
+                </div>
+                <h3>For the Driver</h3>
+                <p>Offset your fuel costs and maintenance while helping the environment. Meet fellow professionals during your daily commute.</p>
+                <ul>
+                  <li><span className="material-symbols-outlined">check_circle</span> Reduce monthly commute expenses</li>
+                  <li><span className="material-symbols-outlined">check_circle</span> Flexible scheduling</li>
+                  <li><span className="material-symbols-outlined">check_circle</span> Professional network</li>
+                </ul>
+              </div>
+            </motion.div>
+            <motion.div
+              className="overview-card"
+              initial={{ opacity: 0, x: 30 }}
+              animate={overviewVisible ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="overview-card-img">
+                <img src="/images/passenger.jpg" alt="Professional Passenger" />
+              </div>
+              <div className="overview-card-body">
+                <div className="overview-card-icon passenger-icon">
+                  <span className="material-symbols-outlined">person</span>
+                </div>
+                <h3>For the Passenger</h3>
+                <p>Skip the stress of navigating Hyderabad traffic. Enjoy a premium carpool experience with door-to-door convenience and transparent pricing.</p>
+                <ul>
+                  <li><span className="material-symbols-outlined">check_circle</span> Premium vehicle comfort</li>
+                  <li><span className="material-symbols-outlined">check_circle</span> Safety first tracking</li>
+                  <li><span className="material-symbols-outlined">check_circle</span> Cost-effective premium travel</li>
+                </ul>
+              </div>
+            </motion.div>
           </div>
-        </motion.div>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.15, ease: 'easeOut' }}
-        >
-          Ride together,<br />
-          <span className="gradient-text">save together</span>
-        </motion.h1>
-
-        <motion.p
-          className="hero-subtitle"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
-        >
-          The smart way to commute in Hyderabad. Offer a ride, find a ride,
-          and make every journey count.
-        </motion.p>
-
-        <motion.div
-          className="hero-btns"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.45 }}
-        >
-          <Link to="/register" className="landing-btn-primary" style={{ padding: '14px 32px', fontSize: '1rem' }}>
-            Start Your Journey
-          </Link>
-          <a href="#features" className="landing-btn-secondary" style={{ padding: '14px 32px', fontSize: '1rem' }}>
-            Learn More
-          </a>
-        </motion.div>
-
-        <motion.div
-          className="hero-stats-row"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.7 }}
-        >
-          <div className="hero-stat">
-            <div className="hero-stat-number">10K+</div>
-            <div className="hero-stat-label">Active Riders</div>
-          </div>
-          <div className="hero-stat">
-            <div className="hero-stat-number">25K+</div>
-            <div className="hero-stat-label">Rides Completed</div>
-          </div>
-          <div className="hero-stat">
-            <div className="hero-stat-number">4.8</div>
-            <div className="hero-stat-label">Avg Rating</div>
-          </div>
-        </motion.div>
-
-        <div className="hero-scroll-indicator">
-          <div className="mouse" />
-          <span>Scroll to explore</span>
         </div>
       </section>
 
-      <FeaturesSection />
-      <StatsSection />
-      <RoutesSection />
-      <TestimonialsSection />
-      <CTASection />
-      <Footer />
+      {/* Features Bento Grid */}
+      <section className="section-features" id="features" ref={featuresRef}>
+        <div className="section-features-inner">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            animate={featuresVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5 }}
+          >
+            Sophisticated Ecosystem
+          </motion.h2>
+          <div className="features-bento">
+            <motion.div
+              className="bento-card bento-wide"
+              initial={{ opacity: 0, y: 20 }}
+              animate={featuresVisible ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <div className="bento-flex">
+                <div className="bento-text">
+                  <div className="bento-icon-wrap">
+                    <span className="material-symbols-outlined">security</span>
+                  </div>
+                  <h4>Verified Rating System</h4>
+                  <p>Our community-driven rating system ensures that only the most reliable and courteous commuters stay on the platform. Safety and trust are our priorities.</p>
+                </div>
+
+              </div>
+            </motion.div>
+            <motion.div
+              className="bento-card bento-primary"
+              initial={{ opacity: 0, y: 20 }}
+              animate={featuresVisible ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.15 }}
+            >
+              <span className="material-symbols-outlined bento-primary-icon">how_to_reg</span>
+              <div>
+                <h4>Simple Signup</h4>
+                <p>Register in under 2 minutes with your corporate ID and LinkedIn.</p>
+              </div>
+            </motion.div>
+            <motion.div
+              className="bento-card"
+              initial={{ opacity: 0, y: 20 }}
+              animate={featuresVisible ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <span className="material-symbols-outlined bento-icon">chat</span>
+              <h4>Secure Chat</h4>
+              <p>Coordinate pickups without sharing personal contact numbers.</p>
+            </motion.div>
+            <motion.div
+              className="bento-card"
+              initial={{ opacity: 0, y: 20 }}
+              animate={featuresVisible ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.25 }}
+            >
+              <span className="material-symbols-outlined bento-icon">search</span>
+              <h4>Easy Search</h4>
+              <p>Smart filters for time, route, vehicle type and preferences.</p>
+            </motion.div>
+            <motion.div
+              className="bento-card"
+              initial={{ opacity: 0, y: 20 }}
+              animate={featuresVisible ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <span className="material-symbols-outlined bento-icon">verified</span>
+              <h4>Vehicle Audit</h4>
+              <p>Every vehicle undergoes a visual and documentation check.</p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Live Tracking */}
+      <section className="section-tracking" id="tracking" ref={trackingRef}>
+        <div className="section-tracking-inner">
+          <motion.div
+            className="tracking-content"
+            initial={{ opacity: 0, x: -30 }}
+            animate={trackingVisible ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.6 }}
+          >
+            <h2>Real-Time Sync</h2>
+            <p>Transparency builds trust. Our advanced tracking interface provides real-time updates for both parties, ensuring you're never left guessing.</p>
+            <div className="tracking-pulse">
+              <div className="pulse-dot" />
+              <span>Live Pulse System</span>
+            </div>
+            <div className="tracking-feature-card">
+              <span className="material-symbols-outlined">location_on</span>
+              <div>
+                <p className="tracking-feature-title">Precision Tracking</p>
+                <p className="tracking-feature-desc">Accurate within 5 meters for seamless pickup experiences.</p>
+              </div>
+            </div>
+          </motion.div>
+          <motion.div
+            className="tracking-mockup"
+            initial={{ opacity: 0, x: 30 }}
+            animate={trackingVisible ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.15 }}
+          >
+            <div className="mockup-frame">
+              <img src="/images/tracking.jpg" alt="Real-time Tracking Interface" />
+              <div className="mockup-overlay-top">
+                <div className="mockup-chip">
+                  <span className="mockup-dot" />
+                  En Route to HITEC City
+                </div>
+                <div className="mockup-time">14 MINS</div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Popular Routes */}
+      <section className="section-routes" id="routes" ref={routesRef}>
+        <div className="section-routes-inner">
+          <motion.div
+            className="routes-header"
+            initial={{ opacity: 0, y: 20 }}
+            animate={routesVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5 }}
+          >
+            <div>
+              <h2>Popular Routes</h2>
+              <p>Fastest commute patterns for Hyderabad professionals.</p>
+            </div>
+          </motion.div>
+          <div className="routes-grid-new">
+            {POPULAR_ROUTES.slice(0, 6).map((route, i) => (
+              <motion.div
+                key={i}
+                className="route-card-new"
+                initial={{ opacity: 0, y: 20 }}
+                animate={routesVisible ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.4, delay: i * 0.06 }}
+              >
+                <div className="route-card-header">
+                  <div>
+                    <span className="route-label">Starting from</span>
+                    <span className="route-city">{route.from}</span>
+                  </div>
+                  <span className="material-symbols-outlined route-arrow">trending_flat</span>
+                  <div className="route-end">
+                    <span className="route-label">Ending at</span>
+                    <span className="route-city">{route.to}</span>
+                  </div>
+                </div>
+                <div className="route-card-footer">
+                  <div className="route-avatars">
+                    <div className="route-avatar" />
+                    <div className="route-avatar" />
+                    <div className="route-avatar-more">+N</div>
+                  </div>
+                  <span className="route-count">POPULAR ROUTE</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="section-steps" ref={stepsRef}>
+        <div className="section-steps-inner">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            animate={stepsVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5 }}
+          >
+            How CoRide Works
+          </motion.h2>
+          <div className="steps-grid">
+            {[
+              { icon: 'person_add', title: 'Join', desc: 'Complete your profile with professional verification.' },
+              { icon: 'manage_search', title: 'Match', desc: 'Search or offer rides based on your daily schedule.' },
+              { icon: 'handshake', title: 'Confirm', desc: 'Review profile ratings and confirm through secure chat.' },
+              { icon: 'celebration', title: 'Ride', desc: 'Share the cost, conversation, and a better commute.' },
+            ].map((step, i) => (
+              <motion.div
+                key={i}
+                className="step-item"
+                initial={{ opacity: 0, y: 30 }}
+                animate={stepsVisible ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5, delay: i * 0.12 }}
+              >
+                <div className={`step-circle ${i === 3 ? 'step-circle-primary' : ''}`}>
+                  <span className="material-symbols-outlined">{step.icon}</span>
+                </div>
+                <h5>{step.title}</h5>
+                <p>{step.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Future Vision */}
+      <section className="section-vision" ref={visionRef}>
+        <div className="section-vision-inner">
+          <motion.div
+            className="vision-content"
+            initial={{ opacity: 0, y: 30 }}
+            animate={visionVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+          >
+            <span className="vision-label">Roadmap 2026</span>
+            <h2>What's Coming to CoRide</h2>
+            <p>We are constantly evolving to make your commute even safer and more seamless. Here's a glimpse into the future of urban mobility in Hyderabad.</p>
+            <div className="vision-grid">
+              {[
+                { icon: 'smartphone', text: 'Native iOS & Android Apps' },
+                { icon: 'payments', text: 'Seamless Auto-Pay' },
+                { icon: 'female', text: 'Women-Only Ride Toggles' },
+                { icon: 'electric_car', text: 'EV Commute Priority' },
+              ].map((item, i) => (
+                <div key={i} className="vision-item">
+                  <span className="material-symbols-outlined vision-item-icon">{item.icon}</span>
+                  <span>{item.text}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="section-cta" ref={ctaRef}>
+        <div className="section-cta-inner">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={ctaVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+          >
+            <h2>Ready to transform your daily commute?</h2>
+            <p>Start riding smarter, together with Hyderabad professionals.</p>
+            <div className="cta-btns-row">
+              <Link to="/register" className="cta-btn-primary">Start Riding Today</Link>
+              <Link to="/login" className="cta-btn-secondary">Sign In</Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="landing-footer">
+        <div className="footer-inner">
+          <div className="footer-brand">
+            <h3>CoRide</h3>
+            <p>Redefining the daily professional commute with security, community, and efficiency at the core.</p>
+          </div>
+          <div className="footer-col">
+            <h4>Company</h4>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Careers</a>
+          </div>
+          <div className="footer-col">
+            <h4>Support</h4>
+            <a href="#">Help Center</a>
+            <a href="#">Contact</a>
+            <a href="#">Corporate Solutions</a>
+          </div>
+          <div className="footer-col">
+            <h4>Connect</h4>
+            <div className="footer-social">
+              <a href="#" className="social-icon"><span className="material-symbols-outlined">share</span></a>
+              <a href="#" className="social-icon"><span className="material-symbols-outlined">mail</span></a>
+              <a href="#" className="social-icon"><span className="material-symbols-outlined">language</span></a>
+            </div>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <p>© 2026 CoRide Technologies. Premium Commuting for Hyderabad.</p>
+        </div>
+      </footer>
     </div>
   )
 }

@@ -5,12 +5,13 @@ import Navbar from './components/layout/Navbar'
 import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
 import SearchRides from './pages/SearchRides'
+import OfferRide from './pages/OfferRide'
 import MyRides from './pages/MyRides'
 import RideDetailPage from './pages/RideDetailPage'
 import ChatPage from './pages/ChatPage'
 import ProfilePage from './pages/ProfilePage'
-import Login from './components/auth/Login'
-import Register from './components/auth/Register'
+import Login from './pages/Login'
+import Register from './pages/Register'
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -55,14 +56,20 @@ function AppLayout({ children }) {
   const isLanding = location.pathname === '/'
   const isAuth = location.pathname === '/login' || location.pathname === '/register'
 
+  const content = (
+    <AnimatePresence mode="wait">
+      <AnimatedPage key={location.pathname}>
+        {children}
+      </AnimatedPage>
+    </AnimatePresence>
+  )
+
+  if (isLanding || isAuth) return content
+
   return (
     <div className="app">
-      {!isLanding && !isAuth && <Navbar />}
-      <AnimatePresence mode="wait">
-        <AnimatedPage key={location.pathname}>
-          {children}
-        </AnimatedPage>
-      </AnimatePresence>
+      <Navbar />
+      {content}
     </div>
   )
 }
@@ -83,6 +90,7 @@ function InnerRoutes() {
       <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/search" element={<ProtectedRoute><SearchRides /></ProtectedRoute>} />
+      <Route path="/offer-ride" element={<ProtectedRoute><OfferRide /></ProtectedRoute>} />
       <Route path="/my-rides" element={<ProtectedRoute><MyRides /></ProtectedRoute>} />
       <Route path="/rides/:id" element={<ProtectedRoute><RideDetailPage /></ProtectedRoute>} />
       <Route path="/chat/:rideId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />

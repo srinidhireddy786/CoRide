@@ -26,7 +26,8 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const login = (userData) => {
+  const login = (token, userData) => {
+    setToken(token)
     saveUser(userData)
     setUser(userData)
   }
@@ -36,8 +37,13 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+    const updateUser = (data) => {
+    saveUser(data)
+    setUser(data)
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, setUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, setUser, updateUser }}>
       {!loading && children}
     </AuthContext.Provider>
   )

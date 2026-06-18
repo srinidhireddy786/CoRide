@@ -27,4 +27,8 @@ async def update_profile(req: ProfileUpdate, user_id: str = Depends(get_current_
         "UPDATE users SET name = $1, phone = $2 WHERE id = $3",
         req.name, req.phone, user_id,
     )
-    return {"message": "Profile updated"}
+    user = await fetchrow(
+        "SELECT id, name, email, phone, avg_rating, total_ratings FROM users WHERE id = $1",
+        user_id,
+    )
+    return dict(user)
