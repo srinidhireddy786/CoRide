@@ -45,6 +45,17 @@ export default function Login() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
       >
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          style={{ textAlign: 'center', marginBottom: 16 }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
+            <span className="material-symbols-outlined" style={{ color: 'var(--primary)', fontSize: 32, fontVariationSettings: "'FILL' 1" }}>directions_car</span>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)' }}>CoRide</span>
+          </div>
+        </motion.div>
         <motion.h1
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}

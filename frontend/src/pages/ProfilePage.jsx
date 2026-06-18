@@ -23,7 +23,7 @@ export default function ProfilePage() {
 
     setSaving(true)
     try {
-      const updated = await api.put('/api/profile', { name: name.trim(), phone: phone.trim() })
+      const updated = await api.patch('/api/profile', { name: name.trim(), phone: phone.trim() })
       updateUser(updated)
       toast.success('Profile updated!')
     } catch (err) {

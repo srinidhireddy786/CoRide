@@ -39,7 +39,7 @@ export default function NotificationBell() {
           const newN = data.filter((n) => !existing.has(n.id))
           if (newN.length > 0) {
             lastIdRef.current = newN[newN.length - 1].id
-            newN.forEach((n) => toast(n.title, { icon: '🔔' }))
+            newN.forEach((n) => toast(n.title, { icon: '📬' }))
           }
           return [...newN, ...prev]
         })
@@ -80,7 +80,7 @@ export default function NotificationBell() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
-        🔔
+        <span className="material-symbols-outlined" style={{ fontSize: 24 }}>notifications</span>
         <AnimatePresence>
           {unread > 0 && (
             <motion.span
