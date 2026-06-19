@@ -3,6 +3,7 @@
 A ride-sharing application connecting drivers and passengers with real-time chat, GPS tracking, and seamless booking.
 
 ## Tech Stack
+          
 
 - **Frontend:** React + Vite, Framer Motion, Leaflet Maps, react-hot-toast
 - **Backend:** FastAPI (Python), asyncpg, JWT auth (bcrypt + HS256)
@@ -78,10 +79,15 @@ A ride-sharing application connecting drivers and passengers with real-time chat
 ### UI/UX
 
 - Page transitions with Framer Motion
-- Scroll-triggered reveal animations
+- Scroll-triggered reveal animations  
 - Responsive navbar with mobile support
 - Custom CSS design system with CSS custom properties
 - Material Symbols icons throughout
+
+- Frontend:React+Vite +TailwindCSS
+- Backend:FastAPI(Python)
+- Database: PostgreSQL (via asyncpg)
+
 
 ## Getting Started
 
@@ -145,11 +151,3 @@ npm run dev
 ### Database
 
 The schema (tables: `users`, `vehicles`, `rides`, `ride_requests`, `ride_participants`, `chat_messages`, `notifications`, `ratings`) must be set up manually in your PostgreSQL database. Refer to the backend models and router files for column definitions.
-
-## Roadmap
-
-- Native iOS & Android apps
-- Seamless Auto-Pay integration
-- Women-only ride toggles
-- EV commute priority
-- WebSocket-based real-time (replacing HTTP polling)

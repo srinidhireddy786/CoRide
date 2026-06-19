@@ -5,7 +5,7 @@ from database import fetch, fetchrow, execute
 from auth import get_current_user
 
 router = APIRouter(prefix="/api/ratings", tags=["ratings"])
-
+#User can check ratings of the ride
 class RatingCreate(BaseModel):
     ride_id: str
     stars: int
@@ -20,7 +20,7 @@ async def check_rating(ride_id: str, user_id: str = Depends(get_current_user)):
     if existing:
         return {"rated": True, "stars": existing["stars"], "review": existing["review"]}
     return {"rated": False}
-
+#User can give ratings
 @router.post("")
 async def create_rating(req: RatingCreate, user_id: str = Depends(get_current_user)):
     ride = await fetchrow("SELECT * FROM rides WHERE id = $1", req.ride_id)

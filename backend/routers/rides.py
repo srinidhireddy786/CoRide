@@ -6,7 +6,7 @@ from database import fetch, fetchrow, execute
 from auth import get_current_user
 
 router = APIRouter(prefix="/api/rides", tags=["rides"])
-
+# user create their ride for commute
 class RideCreate(BaseModel):
     from_city: str
     to_city: str
@@ -75,7 +75,7 @@ async def create_ride(req: RideCreate, user_id: str = Depends(get_current_user))
         req.final_cost, req.distance_km,
     )
     return dict(row)
-
+# users can check their rides details
 @router.get("/my")
 async def my_rides(user_id: str = Depends(get_current_user)):
     rows = await fetch(
@@ -87,7 +87,7 @@ async def my_rides(user_id: str = Depends(get_current_user)):
         user_id,
     )
     return [dict(r) for r in rows]
-
+#passenger can the details of the driver
 @router.get("/joined")
 async def joined_rides(user_id: str = Depends(get_current_user)):
     rows = await fetch(
@@ -118,7 +118,7 @@ async def get_ride(ride_id: str, user_id: str = Depends(get_current_user)):
 
     result = dict(row)
 
-    # Include user's booking status if they're a passenger
+# Include user's booking status if they're a passenger
     booking = await fetchrow(
         "SELECT id, status FROM ride_requests WHERE ride_id = $1 AND passenger_id = $2 AND status != 'cancelled'",
         ride_id, user_id,

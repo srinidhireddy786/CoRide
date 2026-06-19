@@ -4,7 +4,7 @@ from database import fetchrow, execute
 from auth import get_current_user
 
 router = APIRouter(prefix="/api/profile", tags=["profile"])
-
+# profile API created
 class ProfileUpdate(BaseModel):
     name: str
     phone: str

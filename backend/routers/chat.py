@@ -4,6 +4,7 @@ from typing import Optional
 from database import fetch, fetchrow, execute
 from auth import get_current_user
 
+# Router for handling ride-based chat operations
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
 class MessageCreate(BaseModel):

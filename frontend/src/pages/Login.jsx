@@ -165,7 +165,7 @@ export default function Login() {
           </form>
 
           <p className="auth-footer-text">
-            Don't have an account? <Link to="/register">Sign up</Link>
+            New to CoRide? <Link to="/register">Sign up</Link>
           </p>
         </motion.div>
       </div>
