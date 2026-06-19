@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { formatRideDateTime, formatVehicleName, getDriverName, getInitials, getStatusLabel } from '../lib/rideDisplay'
+import { useAuth } from '../contexts/AuthContext'
 
 const rideVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -14,6 +15,7 @@ const rideVariants = {
 }
 
 export default function MyRides() {
+  const { user } = useAuth()
   const [offered, setOffered] = useState([])
   const [joined, setJoined] = useState([])
   const [tab, setTab] = useState('upcoming')
@@ -21,11 +23,15 @@ export default function MyRides() {
   const navigate = useNavigate()
 
   useEffect(() => {
+    if (!user) {
+      setLoading(false)
+      return
+    }
     Promise.all([
       api.get('/api/rides/my').then((d) => setOffered((d || []).map((ride) => ({ ...ride, user_role: 'Driver' })))).catch(() => {}),
       api.get('/api/rides/joined').then((d) => setJoined((d || []).map((ride) => ({ ...ride, user_role: 'Passenger' })))).catch(() => {}),
     ]).finally(() => setLoading(false))
-  }, [])
+  }, [user])
 
   const allUpcoming = [...offered, ...joined].filter(
     (r) => r.status !== 'completed' && r.status !== 'cancelled'

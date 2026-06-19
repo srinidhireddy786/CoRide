@@ -12,6 +12,8 @@ import ChatPage from './pages/ChatPage'
 import ProfilePage from './pages/ProfilePage'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsOfService from './pages/TermsOfService'
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -88,6 +90,8 @@ function InnerRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
       <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-of-service" element={<TermsOfService />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/search" element={<ProtectedRoute><SearchRides /></ProtectedRoute>} />
       <Route path="/offer-ride" element={<ProtectedRoute><OfferRide /></ProtectedRoute>} />

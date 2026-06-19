@@ -4695,6 +4695,34 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .ride-card-horizontal:hover .ride-map-overlay { background: transparent; }
 
+.ride-map-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+  .ride-map-column {
+    width: 192px;
+  }
+}
+
+.ride-map-route-labels {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ride-map-route-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  color: var(--on-surface);
+}
+
 .ride-map-badge {
   position: absolute;
   bottom: 8px;

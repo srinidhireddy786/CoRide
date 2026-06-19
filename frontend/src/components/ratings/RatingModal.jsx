@@ -17,7 +17,8 @@ export default function RatingModal({ booking, ride, onClose }) {
   const [hover, setHover] = useState(0)
   const [loading, setLoading] = useState(false)
 
-  if (!booking || booking.rider_id !== user.id) return null
+  if (!user || !ride) return null
+  if (booking && booking.rider_id !== user.id) return null
 
   const submit = async () => {
     if (stars === 0) return toast.error('Select a rating.')
@@ -65,7 +66,9 @@ export default function RatingModal({ booking, ride, onClose }) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.15 }}
         >
-          How was your trip?
+          {ride.from_city && ride.to_city
+            ? `${ride.from_city} → ${ride.to_city}`
+            : 'How was your trip?'}
         </motion.p>
 
         <div className="star-row">

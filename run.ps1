@@ -22,7 +22,7 @@ function Check-Cmd($Name) {
 Write-Host "`n=== CoRide Setup & Run ===" -ForegroundColor Cyan
 
 # === Prerequisites ===
-Write-Host "`n[1/4] Checking prerequisites..." -ForegroundColor Yellow
+Write-Host "`n[1/5] Checking prerequisites..." -ForegroundColor Yellow
 $pyVer = python --version 2>&1
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: Python not found. Install Python 3.12+ first." -ForegroundColor Red
@@ -37,9 +37,29 @@ Write-Host "  npm:    $(npm --version)" -ForegroundColor Gray
 $StartBackend = !$FrontendOnly
 $StartFrontend = !$BackendOnly
 
+# === Environment Files ===
+Write-Host "`n[2/5] Checking environment files..." -ForegroundColor Yellow
+$backendEnv = Join-Path $BackendDir ".env"
+$frontendEnv = Join-Path $FrontendDir ".env"
+
+if (!(Test-Path $backendEnv)) {
+    Write-Host "  WARNING: backend/.env not found. Copy backend/.env.example to backend/.env and fill in your settings." -ForegroundColor Magenta
+}
+if (!(Test-Path $frontendEnv)) {
+    Write-Host "  WARNING: frontend/.env not found. Copy frontend/.env.example to frontend/.env and fill in your settings." -ForegroundColor Magenta
+}
+if (Test-Path $frontendEnv) {
+    $tomtomKey = (Get-Content $frontendEnv | Where-Object { $_ -match '^VITE_TOMTOM_API_KEY=' } | ForEach-Object { $_ -replace '^VITE_TOMTOM_API_KEY=' })
+    if ([string]::IsNullOrEmpty($tomtomKey) -or $tomtomKey -eq 'your_tomtom_api_key_here') {
+        Write-Host "  WARNING: VITE_TOMTOM_API_KEY in frontend/.env is missing or placeholder — maps/autocomplete will not work." -ForegroundColor Magenta
+    } else {
+        Write-Host "  VITE_TOMTOM_API_KEY found" -ForegroundColor Gray
+    }
+}
+
 # === Backend Setup ===
 if ($StartBackend) {
-    Write-Host "`n[2/4] Setting up backend..." -ForegroundColor Yellow
+    Write-Host "`n[3/5] Setting up backend..." -ForegroundColor Yellow
     try {
         Push-Location $BackendDir
         if (!(Test-Path "venv")) {
@@ -61,7 +81,7 @@ if ($StartBackend) {
 
 # === Frontend Setup ===
 if ($StartFrontend) {
-    Write-Host "`n[3/4] Setting up frontend..." -ForegroundColor Yellow
+    Write-Host "`n[4/5] Setting up frontend..." -ForegroundColor Yellow
     try {
         Push-Location $FrontendDir
         if (!(Test-Path "node_modules")) {
@@ -78,7 +98,7 @@ if ($StartFrontend) {
 }
 
 # === Start Servers ===
-Write-Host "`n[4/4] Starting servers..." -ForegroundColor Yellow
+Write-Host "`n[5/5] Starting servers..." -ForegroundColor Yellow
 
 if ($StartBackend) {
     $pythonExe = Join-Path $BackendDir "venv\Scripts\python.exe"
