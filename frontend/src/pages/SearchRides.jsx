@@ -26,6 +26,14 @@ export default function SearchRides() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [sortBy, setSortBy] = useState('earliest')
+  const [allRides, setAllRides] = useState([])
+  const [initialLoading, setInitialLoading] = useState(true)
+
+  useEffect(() => {
+    api.get('/api/rides').then((data) => {
+      setAllRides(data || [])
+    }).catch(() => {}).finally(() => setInitialLoading(false))
+  }, [])
 
   const updateForm = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
@@ -172,9 +180,22 @@ export default function SearchRides() {
           )}
 
           <AnimatePresence mode="wait">
-            {results === null && !loading && !form.from && !form.to && (
+            {results === null && initialLoading && (
               <motion.div
-                key="initial"
+                key="initial-loading"
+                className="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className="spinner spinner-lg" />
+                <span>Loading available rides...</span>
+              </motion.div>
+            )}
+
+            {results === null && !initialLoading && allRides.length === 0 && (
+              <motion.div
+                key="empty-all"
                 className="search-initial-state"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -182,9 +203,115 @@ export default function SearchRides() {
               >
                 <div className="empty-state">
                   <span className="material-symbols-outlined" style={{ fontSize: 48, color: 'var(--outline-variant)', marginBottom: 12 }}>search</span>
-                  <h3>Find your perfect ride</h3>
-                  <p>Enter your origin and destination to search for rides.</p>
+                  <h3>No rides available</h3>
+                  <p>There are no open rides right now. Check back later or offer a ride!</p>
                 </div>
+              </motion.div>
+            )}
+
+            {results === null && !initialLoading && allRides.length > 0 && (
+              <motion.div
+                key="all-rides"
+                className="ride-cards-list"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className="results-header">
+                  <span className="results-count">
+                    Showing <strong>all {allRides.length} open ride{allRides.length !== 1 ? 's' : ''}</strong>
+                  </span>
+                  <div className="results-sort">
+                    <span className="results-sort-label">Sort by:</span>
+                    <select
+                      className="results-sort-select"
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                    >
+                      {SORT_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                {[...allRides].sort((a, b) => {
+                  if (sortBy === 'price')
+                    return (a.price_per_seat || a.final_cost || 0) - (b.price_per_seat || b.final_cost || 0)
+                  return new Date(a.departure_time || 0) - new Date(b.departure_time || 0)
+                }).map((ride, i) => (
+                  <motion.div
+                    key={ride.id}
+                    className="ride-card-horizontal"
+                    custom={i}
+                    variants={cardVariants}
+                    initial="hidden"
+                    animate="visible"
+                    layout
+                  >
+                    <div className="ride-card-inner">
+                      <div className="ride-map-preview">
+                        <RouteMap
+                          from={{ lat: ride.from_lat, lng: ride.from_lng }}
+                          to={{ lat: ride.to_lat, lng: ride.to_lng }}
+                          height={160}
+                        />
+                        {ride.distance_km && (
+                          <span className="ride-map-badge">{ride.distance_km} km Route</span>
+                        )}
+                      </div>
+                      <div className="ride-card-info">
+                        <div className="ride-card-top">
+                          <div>
+                            <div className="ride-card-driver-row">
+                              <h3 className="ride-card-driver-name">{getDriverName(ride)}</h3>
+                              <span className="material-symbols-outlined ride-verified-icon">verified</span>
+                              <div className="ride-rating-pill">
+                                <span className="material-symbols-outlined ride-rating-star">star</span>
+                                <span>{ride.driver_avg_rating ? Number(ride.driver_avg_rating).toFixed(1) : '-'}</span>
+                              </div>
+                            </div>
+                            <p className="ride-card-vehicle">
+                              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>directions_car</span>
+                              {formatVehicleName(ride)}
+                            </p>
+                          </div>
+                          <div className="ride-card-departure">
+                            <span className="ride-departure-label">Departure</span>
+                            <span className="ride-departure-time">{formatRideTime(ride.departure_time)}</span>
+                          </div>
+                        </div>
+                        <div className="ride-card-features">
+                          {ride.available_seats != null && (
+                            <div className="ride-feature-item">
+                              <span className="material-symbols-outlined">event_seat</span>
+                              <span>{ride.available_seats} seat{ride.available_seats !== 1 ? 's' : ''} left</span>
+                            </div>
+                          )}
+                          {ride.distance_km != null && (
+                            <div className="ride-feature-item">
+                              <span className="material-symbols-outlined">route</span>
+                              <span>{Number(ride.distance_km).toFixed(1)} km</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="ride-card-cta">
+                        <div className="ride-card-price">
+                          <span className="ride-price-label">Total per seat</span>
+                          <span className="ride-price-value">{formatCurrency(ride.price_per_seat ?? ride.final_cost)}</span>
+                        </div>
+                        <motion.button
+                          className="ride-book-btn"
+                          onClick={() => navigate(`/rides/${ride.id}`)}
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          Book Now
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
               </motion.div>
             )}
 

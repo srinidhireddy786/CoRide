@@ -191,8 +191,6 @@ body {
 .safety-card,
 .profile-card,
 .auth-form-panel,
-.offer-ride-form,
-.search-bar-card,
 .request-card,
 .ride-map-section,
 .chat-window-full,
@@ -245,15 +243,7 @@ body {
 .dash-driver-name,
 .conv-name,
 .chat-header-name,
-.dash-active-cities,
 .dash-active-time,
-.rides-location-name,
-.rides-vehicle-name,
-.ride-card-vehicle,
-.driver-vehicle-name,
-.route-point-address,
-.city,
-.rides-route-pair span,
 .badge,
 .rides-badge,
 .dash-confirmed,
@@ -678,6 +668,18 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   border-radius: 1px;
 }
 .city { font-weight: 600; }
+.rides-location-name,
+.rides-vehicle-name,
+.ride-card-vehicle,
+.driver-vehicle-name,
+.route-point-address,
+.city,
+.rides-route-pair span,
+.dash-active-cities {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+}
 .ride-card-footer {
   display: flex;
   justify-content: space-between;
@@ -3204,6 +3206,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   align-items: flex-start;
   gap: 16px;
   position: relative;
+  min-width: 0;
 }
 
 .rides-route-dot {
@@ -3250,17 +3253,11 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   font-weight: 600;
   font-size: 0.9rem;
   margin-bottom: 2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .rides-location-sub {
   font-size: 0.8rem;
   color: var(--on-surface-variant);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* Details column */
