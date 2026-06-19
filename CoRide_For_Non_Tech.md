@@ -38,10 +38,10 @@ Tell the app:
 - How many seats you're offering
 - How much each seat costs
 
-The app automatically figures out the location coordinates and distance.
+The app automatically figures out the location coordinates and distance. As you type in the from/to fields, address suggestions appear — just tap to select.
 
 ### 4. Search for Rides (for passengers)
-Type your starting point and destination. Pick a date. The app shows you all matching rides with driver details, timings, seat availability, and price.
+Type your starting point and destination — the app shows live address suggestions as you type. Pick a date. The app shows you all matching rides with driver details, timings, seat availability, and price.
 
 You can also quickly pick from popular Hyderabad routes like:
 - HITEC City → Gachibowli
@@ -148,7 +148,7 @@ View and edit your:
 - **Website (Frontend):** Built with React — runs in your browser
 - **Server (Backend):** Built with FastAPI (Python) — handles all the logic
 - **Database:** PostgreSQL — stores all user data, rides, messages, etc.
-- **Maps:** Uses OpenStreetMap (free, no API key needed)
+- **Maps:** Uses TomTom Maps (professional-grade maps with traffic data)
 - **Security:** Passwords are encrypted; login uses secure tokens
 - **Hosting:** The website is on Vercel, the server is on Railway
 
