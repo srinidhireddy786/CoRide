@@ -248,17 +248,24 @@ export default function SearchRides() {
                     animate="visible"
                     layout
                   >
-                    <div className="ride-card-inner">
-                      <div className="ride-map-preview">
-                        <RouteMap
-                          from={{ lat: ride.from_lat, lng: ride.from_lng }}
-                          to={{ lat: ride.to_lat, lng: ride.to_lng }}
-                          height={160}
-                        />
-                        {ride.distance_km && (
-                          <span className="ride-map-badge">{ride.distance_km} km Route</span>
-                        )}
-                      </div>
+                      <div className="ride-card-inner">
+                        <div className="ride-map-column">
+                          <div className="ride-map-route-labels">
+                            <span className="ride-map-route-label">{ride.from_city}</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: 14, color: 'var(--outline)' }}>east</span>
+                            <span className="ride-map-route-label">{ride.to_city}</span>
+                          </div>
+                          <div className="ride-map-preview">
+                            <RouteMap
+                              from={{ lat: ride.from_lat, lng: ride.from_lng }}
+                              to={{ lat: ride.to_lat, lng: ride.to_lng }}
+                              height={160}
+                            />
+                            {ride.distance_km && (
+                              <span className="ride-map-badge">{ride.distance_km} km Route</span>
+                            )}
+                          </div>
+                        </div>
                       <div className="ride-card-info">
                         <div className="ride-card-top">
                           <div>
@@ -295,6 +302,8 @@ export default function SearchRides() {
                           )}
                         </div>
                       </div>
+
+                      {/* Price & CTA */}
                       <div className="ride-card-cta">
                         <div className="ride-card-price">
                           <span className="ride-price-label">Total per seat</span>
@@ -362,16 +371,22 @@ export default function SearchRides() {
                     layout
                   >
                     <div className="ride-card-inner">
-                      {/* Map Preview */}
-                      <div className="ride-map-preview">
-                        <RouteMap
-                          from={{ lat: ride.from_lat, lng: ride.from_lng }}
-                          to={{ lat: ride.to_lat, lng: ride.to_lng }}
-                          height={160}
-                        />
-                        {ride.distance_km && (
-                          <span className="ride-map-badge">{ride.distance_km} km Route</span>
-                        )}
+                      <div className="ride-map-column">
+                        <div className="ride-map-route-labels">
+                          <span className="ride-map-route-label">{ride.from_city}</span>
+                          <span className="material-symbols-outlined" style={{ fontSize: 14, color: 'var(--outline)' }}>east</span>
+                          <span className="ride-map-route-label">{ride.to_city}</span>
+                        </div>
+                        <div className="ride-map-preview">
+                          <RouteMap
+                            from={{ lat: ride.from_lat, lng: ride.from_lng }}
+                            to={{ lat: ride.to_lat, lng: ride.to_lng }}
+                            height={160}
+                          />
+                          {ride.distance_km && (
+                            <span className="ride-map-badge">{ride.distance_km} km Route</span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Ride Info */}

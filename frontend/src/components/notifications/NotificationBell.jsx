@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format } from 'date-fns'
 import { api } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
 import toast from 'react-hot-toast'
+import RatingModal from '../ratings/RatingModal'
 
 const dropdownVariants = {
   hidden: { opacity: 0, scale: 0.95, y: -8, transformOrigin: 'top right' },
@@ -11,14 +13,18 @@ const dropdownVariants = {
   exit: { opacity: 0, scale: 0.95, y: -8, transition: { duration: 0.1 } },
 }
 
+const COMPLETED_RIDE_TYPES = new Set(['ride_completed', 'ride_complete'])
+
 export default function NotificationBell() {
   const { user } = useAuth()
   const [notifications, setNotifications] = useState([])
   const [open, setOpen] = useState(false)
   const [shake, setShake] = useState(false)
+  const [pendingRatingRide, setPendingRatingRide] = useState(null)
   const ref = useRef(null)
   const lastIdRef = useRef(null)
   const prevCountRef = useRef(0)
+  const dismissedIdsRef = useRef(new Set())
 
   const unread = notifications.filter((n) => !n.is_read).length
 
@@ -28,6 +34,21 @@ export default function NotificationBell() {
     const interval = setInterval(loadNotifications, 10000)
     return () => clearInterval(interval)
   }, [user])
+
+  const triggerRating = useCallback(async (rideId) => {
+    if (dismissedIdsRef.current.has(rideId)) return
+    try {
+      const [ride, ratingCheck] = await Promise.all([
+        api.get(`/api/rides/${rideId}`),
+        api.get(`/api/ratings/check/${rideId}`),
+      ])
+      if (ride && !ratingCheck?.rated) {
+        setPendingRatingRide(ride)
+      }
+    } catch {
+      // silent
+    }
+  }, [])
 
   const loadNotifications = async () => {
     try {
@@ -39,7 +60,12 @@ export default function NotificationBell() {
           const newN = data.filter((n) => !existing.has(n.id))
           if (newN.length > 0) {
             lastIdRef.current = newN[newN.length - 1].id
-            newN.forEach((n) => toast(n.title, { icon: '📬' }))
+            newN.forEach((n) => {
+              toast(n.title, { icon: '📬' })
+              if (COMPLETED_RIDE_TYPES.has(n.type) && n.related_ride_id) {
+                triggerRating(n.related_ride_id)
+              }
+            })
           }
           return [...newN, ...prev]
         })
@@ -71,6 +97,13 @@ export default function NotificationBell() {
       // silent
     }
   }
+
+  const handleCloseRating = useCallback(() => {
+    if (pendingRatingRide) {
+      dismissedIdsRef.current.add(pendingRatingRide.id)
+    }
+    setPendingRatingRide(null)
+  }, [pendingRatingRide])
 
   return (
     <div className="notification-bell" ref={ref}>
@@ -143,6 +176,14 @@ export default function NotificationBell() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {pendingRatingRide && createPortal(
+        <RatingModal
+          ride={pendingRatingRide}
+          onClose={handleCloseRating}
+        />,
+        document.body,
+      )}
     </div>
   )
 }
