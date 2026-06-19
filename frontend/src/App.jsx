@@ -94,6 +94,7 @@ function InnerRoutes() {
       <Route path="/my-rides" element={<ProtectedRoute><MyRides /></ProtectedRoute>} />
       <Route path="/rides/:id" element={<ProtectedRoute><RideDetailPage /></ProtectedRoute>} />
       <Route path="/chat/:rideId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+      <Route path="/chats" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
     </Routes>
   )

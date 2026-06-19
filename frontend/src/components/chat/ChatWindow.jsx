@@ -21,17 +21,43 @@ function getInitials(name) {
   return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
+const isLocationMsg = (text) => text?.startsWith('https://www.google.com/maps')
+
 export default function ChatWindow({ rideId, conversation }) {
   const { user } = useAuth()
   const [messages, setMessages] = useState([])
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [sharingLocation, setSharingLocation] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
+  const [convName, setConvName] = useState(
+    conversation?.name || conversation?.driver_name || ''
+  )
+  const [driverPhone, setDriverPhone] = useState('')
   const bottomRef = useRef(null)
   const lastIdRef = useRef(null)
-  const convName = conversation?.name || conversation?.driver_name || 'Driver'
   const convStatus = conversation?.status_text || ''
+
+  useEffect(() => {
+    if (conversation?.name || conversation?.driver_name) {
+      setConvName(conversation.name || conversation.driver_name)
+    }
+    if (rideId) {
+      api.get(`/api/rides/${rideId}`)
+        .then((ride) => {
+          const name =
+            ride?.driver_name ||
+            ride?.driver?.name ||
+            ride?.passenger_name ||
+            ride?.user?.name ||
+            ''
+          if (name) setConvName(name)
+          if (ride?.driver_phone) setDriverPhone(ride.driver_phone)
+        })
+        .catch(() => {})
+    }
+  }, [rideId, conversation])
 
   useEffect(() => {
     if (!rideId) return
@@ -67,18 +93,47 @@ export default function ChatWindow({ rideId, conversation }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const send = async () => {
-    if (!content.trim()) return
+  const send = async (messageContent = content) => {
+    const payload = (messageContent || content).trim()
+    if (!payload) return
     setSending(true)
     try {
-      const msg = await api.post(`/api/chat/${rideId}`, { content: content.trim().slice(0, 500) })
+      const msg = await api.post(`/api/chat/${rideId}`, { content: payload.slice(0, 500) })
       setMessages((prev) => [...prev, msg])
       lastIdRef.current = msg.id
-      setContent('')
+      if (messageContent === content) setContent('')
     } catch {
       toast.error('Failed to send message.')
     }
     setSending(false)
+  }
+
+  const shareLocation = async () => {
+    if (!navigator.geolocation) {
+      toast.error('Could not get your location. Please allow location access.')
+      return
+    }
+    setSharingLocation(true)
+    try {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject)
+      })
+      const { latitude, longitude } = position.coords
+      const link = `https://www.google.com/maps?q=${latitude},${longitude}`
+      await send(link)
+    } catch {
+      toast.error('Could not get your location. Please allow location access.')
+    } finally {
+      setSharingLocation(false)
+    }
+  }
+
+  const handleCall = () => {
+    if (driverPhone) {
+      window.location.href = `tel:${driverPhone}`
+    } else {
+      toast.error('Phone number not available.')
+    }
   }
 
   const handleKeyDown = (e) => {
@@ -115,14 +170,11 @@ export default function ChatWindow({ rideId, conversation }) {
 
   return (
     <div className="chat-window-full">
-      {/* Chat Header */}
       <header className="chat-window-header">
         <div className="chat-header-left">
-          <div className="chat-header-avatar">
-            {getInitials(convName)}
-          </div>
+          <div className="chat-header-avatar">{getInitials(convName)}</div>
           <div>
-            <h2 className="chat-header-name">{convName}</h2>
+            <h2 className="chat-header-name">{convName || 'Loading...'}</h2>
             <div className="chat-header-status-row">
               <span className="chat-header-status-dot" />
               <span className="chat-header-status-text">{convStatus || 'Online'}</span>
@@ -130,16 +182,12 @@ export default function ChatWindow({ rideId, conversation }) {
           </div>
         </div>
         <div className="chat-header-actions">
-          <button className="chat-header-btn" title="Secure Call">
+          <button className="chat-header-btn" title="Call Driver" onClick={handleCall}>
             <span className="material-symbols-outlined">call</span>
-          </button>
-          <button className="chat-header-btn" title="More Info">
-            <span className="material-symbols-outlined">info</span>
           </button>
         </div>
       </header>
 
-      {/* Messages Area */}
       <div className="chat-messages-area">
         {messages.length === 0 && (
           <div className="empty-text" style={{ textAlign: 'center', padding: 40 }}>
@@ -163,21 +211,24 @@ export default function ChatWindow({ rideId, conversation }) {
                 layout
               >
                 {msg.sender_id !== user.id && (
-                  <div className="chat-msg-avatar-sm">
-                    {getInitials(convName)}
-                  </div>
+                  <div className="chat-msg-avatar-sm">{getInitials(convName)}</div>
                 )}
                 <div className="chat-msg-content">
                   <div className={`chat-msg-bubble ${msg.sender_id === user.id ? 'mine' : 'theirs'}`}>
-                    <p className="chat-msg-text">{msg.content}</p>
-                    {msg.is_map_share || msg.type === 'map_share' ? (
-                      <div className="chat-map-share-card">
-                        <img src="/images/chat-map.jpg" alt="Live location" className="chat-map-share-img" />
-                        <div className="chat-map-share-overlay">
-                          <span className="chat-map-share-label">Live Tracking Enabled</span>
+                    {isLocationMsg(msg.content) ? (
+                      <a href={msg.content} target="_blank" rel="noreferrer" className="chat-location-card">
+                        <div className="chat-location-map-preview">
+                          <span className="material-symbols-outlined chat-location-pin">location_on</span>
                         </div>
-                      </div>
-                    ) : null}
+                        <div className="chat-location-info">
+                          <span className="chat-location-title">Shared Location</span>
+                          <span className="chat-location-sub">Tap to open in Google Maps</span>
+                        </div>
+                        <span className="material-symbols-outlined chat-location-arrow">open_in_new</span>
+                      </a>
+                    ) : (
+                      <p className="chat-msg-text">{msg.content}</p>
+                    )}
                   </div>
                   <div className="chat-msg-meta">
                     <span className="chat-msg-time">
@@ -195,7 +246,6 @@ export default function ChatWindow({ rideId, conversation }) {
           ))}
         </AnimatePresence>
 
-        {/* Typing Indicator */}
         {isTyping && (
           <motion.div
             className="chat-typing-indicator"
@@ -214,23 +264,27 @@ export default function ChatWindow({ rideId, conversation }) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input Area */}
       <footer className="chat-input-footer">
-        {/* Quick Action Chips */}
         <div className="chat-quick-actions">
-          <button className="quick-action-chip">
+          <button
+            className="quick-action-chip"
+            onClick={shareLocation}
+            disabled={sharingLocation}
+          >
             <span className="material-symbols-outlined">location_on</span>
-            Share Location
+            {sharingLocation ? 'Getting location...' : 'Share Location'}
           </button>
-          <button className="quick-action-chip">
-            <span className="material-symbols-outlined">photo_camera</span>
-            Send Photo
+          <button
+            className="quick-action-chip"
+            onClick={() => setContent('Please wait for 5 mins, I am on my way!')}
+          >
+            ⏱ Wait for 5 mins
           </button>
-          <button className="quick-action-chip">
-            Wait for 5 mins
-          </button>
-          <button className="quick-action-chip">
-            Where are you?
+          <button
+            className="quick-action-chip"
+            onClick={() => setContent('Where are you?')}
+          >
+            📍 Where are you?
           </button>
         </div>
 

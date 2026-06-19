@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import RouteMap from '../components/maps/RouteMap'
+import { formatCurrency, formatRideTime, formatVehicleName, getDriverName } from '../lib/rideDisplay'
 
 const SORT_OPTIONS = [
   { value: 'earliest', label: 'Earliest Departure' },
@@ -59,12 +60,6 @@ export default function SearchRides() {
         return new Date(a.departure_time || 0) - new Date(b.departure_time || 0)
       })
     : []
-
-  const formatTime = (dateStr) => {
-    if (!dateStr) return ''
-    const d = new Date(dateStr)
-    return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-  }
 
   return (
     <div className="search-rides-page">
@@ -248,7 +243,7 @@ export default function SearchRides() {
                         <div className="ride-card-top">
                           <div>
                             <div className="ride-card-driver-row">
-                              <h3 className="ride-card-driver-name">{ride.driver_name}</h3>
+                              <h3 className="ride-card-driver-name">{getDriverName(ride)}</h3>
                               <span className="material-symbols-outlined ride-verified-icon">verified</span>
                               <div className="ride-rating-pill">
                                 <span className="material-symbols-outlined ride-rating-star">star</span>
@@ -257,12 +252,12 @@ export default function SearchRides() {
                             </div>
                             <p className="ride-card-vehicle">
                               <span className="material-symbols-outlined" style={{ fontSize: 18 }}>directions_car</span>
-                              Premium Sedan &bull; {ride.vehicle_name || 'Tesla Model 3'}
+                              {formatVehicleName(ride)}
                             </p>
                           </div>
                           <div className="ride-card-departure">
                             <span className="ride-departure-label">Departure</span>
-                            <span className="ride-departure-time">{formatTime(ride.departure_time)}</span>
+                            <span className="ride-departure-time">{formatRideTime(ride.departure_time)}</span>
                           </div>
                         </div>
 
@@ -273,14 +268,12 @@ export default function SearchRides() {
                               <span>{ride.available_seats} seat{ride.available_seats !== 1 ? 's' : ''} left</span>
                             </div>
                           )}
-                          <div className="ride-feature-item">
-                            <span className="material-symbols-outlined">luggage</span>
-                            <span>Full trunk</span>
-                          </div>
-                          <div className="ride-feature-item">
-                            <span className="material-symbols-outlined">air_purifier</span>
-                            <span>Air Filtered</span>
-                          </div>
+                          {ride.distance_km != null && (
+                            <div className="ride-feature-item">
+                              <span className="material-symbols-outlined">route</span>
+                              <span>{Number(ride.distance_km).toFixed(1)} km</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -288,7 +281,7 @@ export default function SearchRides() {
                       <div className="ride-card-cta">
                         <div className="ride-card-price">
                           <span className="ride-price-label">Total per seat</span>
-                          <span className="ride-price-value">₹{ride.price_per_seat || ride.final_cost || 0}</span>
+                          <span className="ride-price-value">{formatCurrency(ride.price_per_seat ?? ride.final_cost)}</span>
                         </div>
                         <motion.button
                           className="ride-book-btn"

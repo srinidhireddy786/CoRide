@@ -25,7 +25,7 @@ export default function ChatPage() {
 
   const loadConversations = async () => {
     try {
-      const data = await api.get('/api/chat/conversations')
+      const data = await api.get('/api/chat/conversations/list')
       setConversations(data || [])
       if (!selectedId && data?.length > 0) {
         setSelectedId(data[0].ride_id || data[0].id)

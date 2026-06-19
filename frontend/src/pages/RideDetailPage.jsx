@@ -6,14 +6,14 @@ import { useAuth } from '../contexts/AuthContext'
 import { useRideStatus } from '../hooks/useRideStatus'
 import RequestButton from '../components/bookings/RequestButton'
 import RouteMap from '../components/maps/RouteMap'
+import { formatCurrency, formatRideTime, formatVehicleName, getDriverName } from '../lib/rideDisplay'
 
-const STEP_ORDER = ['confirmed', 'driver_en_route', 'arrived', 'completed']
+const STEP_ORDER = ['open', 'in_progress', 'completed']
 
 const STEP_CONFIG = {
-  confirmed: { icon: 'check', label: 'Request Confirmed' },
-  driver_en_route: { icon: 'electric_car', label: 'Driver en route' },
-  arrived: { icon: 'pin_drop', label: 'Arrived at Pickup' },
-  completed: { icon: 'flag', label: 'Final Destination' },
+  open: { icon: 'event_available', label: 'Ride Scheduled' },
+  in_progress: { icon: 'electric_car', label: 'Ride in Progress' },
+  completed: { icon: 'flag', label: 'Completed' },
 }
 
 const sectionVariants = {
@@ -52,7 +52,11 @@ export default function RideDetailPage() {
     if (!window.confirm('Are you sure you want to cancel this request?')) return
     setCancelling(true)
     try {
-      await api.post(`/api/requests/${id}/cancel`)
+      if (ride.booking_id) {
+        await api.patch(`/api/requests/${ride.booking_id}?status=cancelled`)
+      } else {
+        await api.post(`/api/requests/${id}/cancel`)
+      }
       await fetchData()
     } catch {
       await api.patch(`/api/rides/${id}/cancel`).catch(() => {})
@@ -98,11 +102,11 @@ export default function RideDetailPage() {
       >
         <div>
           <nav className="ride-breadcrumb">
-            <button className="breadcrumb-link" onClick={() => navigate('/rides')}>Rides</button>
+            <button className="breadcrumb-link" onClick={() => navigate('/my-rides')}>My Rides</button>
             <span className="material-symbols-outlined breadcrumb-chevron">chevron_right</span>
             <span className="breadcrumb-current">#CR-{ride.id}-HYD</span>
           </nav>
-          <h1 className="ride-detail-title">{ride.from_city} → {ride.to_city}</h1>
+          <h1 className="ride-detail-title">{ride.from_city} to {ride.to_city}</h1>
         </div>
         <div className="ride-header-actions">
           <span className="live-badge">
@@ -179,14 +183,9 @@ export default function RideDetailPage() {
                     </div>
                     <div className="timeline-step-info">
                       <span className="timeline-step-label">{config.label}</span>
-                      <span className="timeline-step-time">
-                        {isCompleted && ride.departure_time
-                          ? new Date(ride.departure_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-                          : isActive
-                            ? 'Current Stage'
-                            : `ETA ${new Date(ride.departure_time || Date.now() + (idx * 30 * 60000)).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`
-                        }
-                      </span>
+                    <span className="timeline-step-time">
+                      {isActive ? 'Current stage' : isCompleted ? 'Done' : 'Upcoming'}
+                    </span>
                     </div>
                   </div>
                 )
@@ -208,14 +207,14 @@ export default function RideDetailPage() {
             <div className="driver-header">
               <div className="driver-avatar-wrap">
                 <div className="driver-avatar">
-                  {ride.driver_name ? ride.driver_name.charAt(0).toUpperCase() : '?'}
+                  {getDriverName(ride).charAt(0).toUpperCase()}
                 </div>
               </div>
               <div className="driver-info">
-                <h2 className="driver-name">{ride.driver_name}</h2>
+                <h2 className="driver-name">{getDriverName(ride)}</h2>
                 <div className="driver-rating-row">
                   <span className="material-symbols-outlined driver-rating-icon">star</span>
-                  <span className="driver-rating-value">{ride.driver_avg_rating ? Number(ride.driver_avg_rating).toFixed(1) : '-'}</span>
+                  <span className="driver-rating-value">{ride.driver_avg_rating != null ? Number(ride.driver_avg_rating).toFixed(1) : 'No ratings yet'}</span>
                 </div>
               </div>
             </div>
@@ -223,8 +222,8 @@ export default function RideDetailPage() {
             <div className="driver-vehicle-card">
               <span className="material-symbols-outlined driver-vehicle-icon">directions_car</span>
               <div>
-                <p className="driver-vehicle-name">{ride.vehicle_name || 'Tesla Model 3'} &bull; Pearl White</p>
-                <p className="driver-vehicle-plate">{ride.vehicle_plate || 'TS 09 EL 2024'}</p>
+                <p className="driver-vehicle-name">{formatVehicleName(ride)}</p>
+                {ride.vehicle_plate && <p className="driver-vehicle-plate">{ride.vehicle_plate}</p>}
               </div>
             </div>
 
@@ -236,7 +235,7 @@ export default function RideDetailPage() {
                 whileTap={{ scale: 0.98 }}
               >
                 <span className="material-symbols-outlined">chat_bubble</span>
-                Chat with Driver
+                {isDriver ? 'Chat with Passengers' : 'Chat with Driver'}
               </motion.button>
               <motion.button
                 className="driver-track-btn"
@@ -295,23 +294,23 @@ export default function RideDetailPage() {
                 <div className="route-detail-dot route-dot-pickup" />
                 <div>
                   <span className="route-point-label">Pickup Location</span>
-                  <span className="route-point-address">{ride.from_city || 'T-Hub 2.0, HITEC City'}</span>
+                  <span className="route-point-address">{ride.from_city}</span>
                 </div>
               </div>
               <div className="route-detail-point">
                 <div className="route-detail-dot route-dot-dropoff" />
                 <div>
                   <span className="route-point-label">Drop-off Location</span>
-                  <span className="route-point-address">{ride.to_city || 'Microsoft Campus, Gachibowli'}</span>
+                  <span className="route-point-address">{ride.to_city}</span>
                 </div>
               </div>
             </div>
             <div className="route-fare-row">
               <div>
                 <span className="route-fare-label">Estimated Fare</span>
-                <span className="route-fare-value">₹{(ride.final_cost || ride.price_per_seat || 450).toFixed(2)}</span>
+                <span className="route-fare-value">{formatCurrency(ride.final_cost ?? ride.price_per_seat)}</span>
               </div>
-              <span className="route-corp-badge">Corporate Pay</span>
+              <span className="route-corp-badge">{formatRideTime(ride.departure_time)}</span>
             </div>
           </motion.div>
 
