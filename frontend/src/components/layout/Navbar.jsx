@@ -43,6 +43,7 @@ export default function Navbar() {
         <div className="nav-links">
           <Link to="/dashboard">Home</Link>
           <Link to="/my-rides">My Rides</Link>
+          <Link to="/chats">Chats</Link> 
           {user && <NotificationBell />}
           {user && (
             <>
