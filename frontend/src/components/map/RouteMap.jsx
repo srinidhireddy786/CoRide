@@ -1,27 +1,82 @@
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet'
-import L from 'leaflet'
+import { useEffect, useRef } from 'react'
+import tt from '@tomtom-international/web-sdk-maps'
 import { motion } from 'framer-motion'
 import { HYDERABAD_CENTER } from '../../lib/hyderabad'
 
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-})
-
-const pulseIcon = L.divIcon({
-  className: '',
-  html: '<div class="marker-pulse"></div>',
-  iconSize: [12, 12],
-  iconAnchor: [6, 6],
-})
+const API_KEY = import.meta.env.VITE_TOMTOM_API_KEY
 
 export default function RouteMap({ from, to, driverLocation, height = '300px' }) {
-  const hasCoords = from?.lat && from?.lng && to?.lat && to?.lng
-  const center = hasCoords
-    ? [(from.lat + to.lat) / 2, (from.lng + to.lng) / 2]
-    : HYDERABAD_CENTER
+  const mapEl = useRef(null)
+  const mapRef = useRef(null)
+  const markersRef = useRef([])
+  const driverMarkerRef = useRef(null)
+
+  useEffect(() => {
+    if (!mapEl.current) return
+    const map = tt.map({
+      key: API_KEY,
+      container: mapEl.current,
+      center: [HYDERABAD_CENTER[1], HYDERABAD_CENTER[0]],
+      zoom: 12,
+      scrollZoom: true,
+      dragPan: true,
+    })
+    mapRef.current = map
+
+    map.on('load', () => {
+      const hasCoords = from?.lat && from?.lng && to?.lat && to?.lng
+      if (hasCoords) {
+        const m1 = new tt.Marker().setLngLat([from.lng, from.lat]).addTo(map)
+        const m2 = new tt.Marker().setLngLat([to.lng, to.lat]).addTo(map)
+        markersRef.current = [m1, m2]
+
+        const bounds = new tt.LngLatBounds()
+        bounds.extend([from.lng, from.lat])
+        bounds.extend([to.lng, to.lat])
+        map.fitBounds(bounds, { padding: 60, maxZoom: 14 })
+      }
+    })
+
+    return () => { map.remove() }
+  }, [])
+
+  useEffect(() => {
+    if (!mapRef.current) return
+    markersRef.current.forEach((m) => m.remove())
+    markersRef.current = []
+
+    if (from?.lat && from?.lng && to?.lat && to?.lng) {
+      const m1 = new tt.Marker().setLngLat([from.lng, from.lat]).addTo(mapRef.current)
+      const m2 = new tt.Marker().setLngLat([to.lng, to.lat]).addTo(mapRef.current)
+      markersRef.current = [m1, m2]
+
+      const bounds = new tt.LngLatBounds()
+      bounds.extend([from.lng, from.lat])
+      bounds.extend([to.lng, to.lat])
+      mapRef.current.fitBounds(bounds, { padding: 60, maxZoom: 14 })
+    }
+  }, [from?.lat, from?.lng, to?.lat, to?.lng])
+
+  useEffect(() => {
+    if (!mapRef.current) return
+    if (driverLocation) {
+      if (driverMarkerRef.current) {
+        driverMarkerRef.current.setLngLat([driverLocation.lng, driverLocation.lat])
+      } else {
+        const el = document.createElement('div')
+        el.style.width = '16px'
+        el.style.height = '16px'
+        el.style.background = '#4f46e5'
+        el.style.borderRadius = '50%'
+        el.style.border = '3px solid white'
+        el.style.boxShadow = '0 0 8px rgba(79,70,229,0.6)'
+        const marker = new tt.Marker({ element: el })
+          .setLngLat([driverLocation.lng, driverLocation.lat])
+          .addTo(mapRef.current)
+        driverMarkerRef.current = marker
+      }
+    }
+  }, [driverLocation?.lat, driverLocation?.lng])
 
   return (
     <motion.div
@@ -30,38 +85,7 @@ export default function RouteMap({ from, to, driverLocation, height = '300px' })
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <MapContainer center={center} zoom={hasCoords ? 11 : 12} style={{ height: '100%', width: '100%' }}>
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        {hasCoords && (
-          <>
-            <Marker position={[from.lat, from.lng]}>
-              <Popup>{from.city || 'Start'}</Popup>
-            </Marker>
-            <Marker position={[to.lat, to.lng]}>
-              <Popup>{to.city || 'End'}</Popup>
-            </Marker>
-            <Polyline
-              positions={[
-                [from.lat, from.lng],
-                [to.lat, to.lng],
-              ]}
-              color="#4f46e5"
-              weight={3}
-              opacity={0.7}
-            />
-          </>
-        )}
-
-        {driverLocation && (
-          <Marker position={[driverLocation.lat, driverLocation.lng]} icon={pulseIcon}>
-            <Popup>Driver is here</Popup>
-          </Marker>
-        )}
-      </MapContainer>
+      <div ref={mapEl} style={{ height: '100%', width: '100%' }} />
     </motion.div>
   )
 }

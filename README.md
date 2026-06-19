@@ -145,11 +145,3 @@ npm run dev
 ### Database
 
 The schema (tables: `users`, `vehicles`, `rides`, `ride_requests`, `ride_participants`, `chat_messages`, `notifications`, `ratings`) must be set up manually in your PostgreSQL database. Refer to the backend models and router files for column definitions.
-
-## Roadmap
-
-- Native iOS & Android apps
-- Seamless Auto-Pay integration
-- Women-only ride toggles
-- EV commute priority
-- WebSocket-based real-time (replacing HTTP polling)

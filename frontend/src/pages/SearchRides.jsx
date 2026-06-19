@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import RouteMap from '../components/maps/RouteMap'
 import { formatCurrency, formatRideTime, formatVehicleName, getDriverName } from '../lib/rideDisplay'
+import AddressAutocomplete from '../components/AddressAutocomplete'
 
 const SORT_OPTIONS = [
   { value: 'earliest', label: 'Earliest Departure' },
@@ -53,6 +54,14 @@ export default function SearchRides() {
     search()
   }
 
+  const handleFromSelect = (item) => {
+    setForm((prev) => ({ ...prev, from: item.label }))
+  }
+
+  const handleToSelect = (item) => {
+    setForm((prev) => ({ ...prev, to: item.label }))
+  }
+
   const sortedResults = results
     ? [...results].sort((a, b) => {
         if (sortBy === 'price')
@@ -73,29 +82,29 @@ export default function SearchRides() {
         <form onSubmit={handleSubmit}>
           <div className="search-bar-grid">
             <div className="search-bar-field">
-              <span className="material-symbols-outlined search-field-icon">location_on</span>
               <div className="search-field-content">
                 <span className="search-field-label">Starting Point</span>
-                <input
-                  type="text"
-                  placeholder="Enter origin"
+                <AddressAutocomplete
                   value={form.from}
-                  onChange={updateForm('from')}
-                  className="search-field-input"
+                  onChange={(val) => setForm((prev) => ({ ...prev, from: val }))}
+                  onSelect={handleFromSelect}
+                  placeholder="Enter origin"
+                  icon="location_on"
+                  inputClassName="search-field-input"
                 />
               </div>
             </div>
             <div className="search-bar-divider" />
             <div className="search-bar-field">
-              <span className="material-symbols-outlined search-field-icon">near_me</span>
               <div className="search-field-content">
                 <span className="search-field-label">Destination</span>
-                <input
-                  type="text"
-                  placeholder="Where to?"
+                <AddressAutocomplete
                   value={form.to}
-                  onChange={updateForm('to')}
-                  className="search-field-input"
+                  onChange={(val) => setForm((prev) => ({ ...prev, to: val }))}
+                  onSelect={handleToSelect}
+                  placeholder="Where to?"
+                  icon="near_me"
+                  inputClassName="search-field-input"
                 />
               </div>
             </div>

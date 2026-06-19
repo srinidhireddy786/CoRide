@@ -3,9 +3,9 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { api } from '../../lib/api'
 import { useAuth } from '../../contexts/AuthContext'
-import { geocodeWithRetry } from '../../lib/geocode'
-import { getDistance } from '../../lib/osrm'
+import { geocodeAddress, calculateRoute } from '../../lib/tomtom'
 import { POPULAR_ROUTES } from '../../lib/hyderabad'
+import AddressAutocomplete from '../AddressAutocomplete'
 
 const fieldVariants = {
   hidden: { opacity: 0, y: 10 },
@@ -19,6 +19,8 @@ export default function PublishRide() {
     from_city: '', to_city: '', vehicle_id: '',
     departure_time: '', total_seats: 1, final_cost: '',
   })
+  const [fromCoords, setFromCoords] = useState(null)
+  const [toCoords, setToCoords] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -32,7 +34,19 @@ export default function PublishRide() {
   const update = (field) => (e) => setForm({ ...form, [field]: e.target.value })
   const updateNum = (field) => (e) => setForm({ ...form, [field]: parseInt(e.target.value) || 1 })
 
-  const selectRoute = (from, to) => setForm({ ...form, from_city: from, to_city: to })
+  const selectRoute = (from, to) => {
+    setForm({ ...form, from_city: from, to_city: to })
+    setFromCoords(null)
+    setToCoords(null)
+  }
+
+  const handleFromSelect = (item) => {
+    setFromCoords({ lat: item.lat, lon: item.lon })
+  }
+
+  const handleToSelect = (item) => {
+    setToCoords({ lat: item.lat, lon: item.lon })
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -57,13 +71,14 @@ export default function PublishRide() {
 
     try {
       const [fromCoord, toCoord] = await Promise.all([
-        geocodeWithRetry(from_city.trim()),
-        geocodeWithRetry(to_city.trim()),
+        fromCoords || geocodeAddress(from_city.trim()),
+        toCoords || geocodeAddress(to_city.trim()),
       ])
 
       let distance = null
       try {
-        distance = await getDistance(fromCoord.lng, fromCoord.lat, toCoord.lng, toCoord.lat)
+        const route = await calculateRoute(fromCoord.lat, fromCoord.lon, toCoord.lat, toCoord.lon)
+        distance = route.distanceMeters / 1000
       } catch {
         // Non-critical
       }
@@ -72,9 +87,9 @@ export default function PublishRide() {
         from_city: from_city.trim(),
         to_city: to_city.trim(),
         from_lat: fromCoord.lat,
-        from_lng: fromCoord.lng,
+        from_lng: fromCoord.lon,
         to_lat: toCoord.lat,
-        to_lng: toCoord.lng,
+        to_lng: toCoord.lon,
         departure_time: depTime.toISOString(),
         total_seats,
         final_cost: parseFloat(final_cost),
@@ -86,6 +101,8 @@ export default function PublishRide() {
         from_city: '', to_city: '', vehicle_id: vehicles[0]?.id || '',
         departure_time: '', total_seats: 1, final_cost: '',
       })
+      setFromCoords(null)
+      setToCoords(null)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -107,8 +124,8 @@ export default function PublishRide() {
   }
 
   const fields = [
-    { field: 'from_city', label: 'From', placeholder: 'e.g. Gachibowli', type: 'text', i: 0 },
-    { field: 'to_city', label: 'To', placeholder: 'e.g. HITEC City', type: 'text', i: 1 },
+    { field: 'from_city', label: 'From', placeholder: 'e.g. Gachibowli', icon: 'location_on', i: 0 },
+    { field: 'to_city', label: 'To', placeholder: 'e.g. HITEC City', icon: 'near_me', i: 1 },
   ]
 
   return (
@@ -146,7 +163,7 @@ export default function PublishRide() {
 
       <form onSubmit={handleSubmit} noValidate>
         <div className="form-row">
-          {fields.map(({ field, label, placeholder, type, i }) => (
+          {fields.map(({ field, label, placeholder, icon, i }) => (
             <motion.label
               key={field}
               custom={i}
@@ -155,11 +172,16 @@ export default function PublishRide() {
               animate="visible"
             >
               {label}
-              <input
-                type={type}
+              <AddressAutocomplete
                 value={form[field]}
-                onChange={update(field)}
+                onChange={(val) => {
+                  setForm({ ...form, [field]: val })
+                  if (field === 'from_city') setFromCoords(null)
+                  else setToCoords(null)
+                }}
+                onSelect={field === 'from_city' ? handleFromSelect : handleToSelect}
                 placeholder={placeholder}
+                icon={icon}
               />
             </motion.label>
           ))}
@@ -196,7 +218,11 @@ export default function PublishRide() {
           animate="visible"
         >
           Vehicle
-          <select value={form.vehicle_id} onChange={update('vehicle_id')}>
+          <select
+            value={form.vehicle_id || ''}
+            onChange={update('vehicle_id')}
+            className="vehicle-select"
+          >
             {vehicles.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.brand} {v.model} ({v.registration_number})

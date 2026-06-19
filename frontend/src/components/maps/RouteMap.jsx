@@ -1,33 +1,65 @@
-import { useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet'
-import L from 'leaflet'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
-import 'leaflet/dist/leaflet.css'
+import { useEffect, useRef } from 'react'
+import tt from '@tomtom-international/web-sdk-maps'
+import { motion } from 'framer-motion'
+import { calculateRoute } from '../../lib/tomtom'
 
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-})
-
-function FitBounds({ from, to }) {
-  const map = useMap()
-  useEffect(() => {
-    if (from && to) {
-      const bounds = L.latLngBounds(
-        [from.lat, from.lng],
-        [to.lat, to.lng]
-      )
-      map.fitBounds(bounds, { padding: [50, 50] })
-    }
-  }, [map, from, to])
-  return null
-}
+const API_KEY = import.meta.env.VITE_TOMTOM_API_KEY
 
 export default function RouteMap({ from, to, height = 300, className = '' }) {
+  const mapEl = useRef(null)
+  const mapRef = useRef(null)
+
+  useEffect(() => {
+    if (!from || !to || !mapEl.current) return
+
+    const map = tt.map({
+      key: API_KEY,
+      container: mapEl.current,
+      center: [(from.lng + to.lng) / 2, (from.lat + to.lat) / 2],
+      zoom: 13,
+      scrollZoom: false,
+      dragPan: true,
+    })
+
+    mapRef.current = map
+
+    map.on('load', async () => {
+      new tt.Marker().setLngLat([from.lng, from.lat]).addTo(map)
+      new tt.Marker().setLngLat([to.lng, to.lat]).addTo(map)
+
+      try {
+        const route = await calculateRoute(from.lat, from.lng, to.lat, to.lng)
+        const coords = route.routeGeometry.map(p => [p.lon, p.lat])
+
+        map.addLayer({
+          id: 'route',
+          type: 'line',
+          source: {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: { type: 'LineString', coordinates: coords },
+            },
+          },
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: { 'line-color': '#008080', 'line-width': 4, 'line-opacity': 0.8 },
+        })
+
+        const bounds = new tt.LngLatBounds()
+        coords.forEach((c) => bounds.extend(c))
+        map.fitBounds(bounds, { padding: 60, maxZoom: 14 })
+      } catch {
+        const bounds = new tt.LngLatBounds()
+        bounds.extend([from.lng, from.lat])
+        bounds.extend([to.lng, to.lat])
+        map.fitBounds(bounds, { padding: 60, maxZoom: 14 })
+      }
+    })
+
+    return () => { map.remove() }
+  }, [from?.lat, from?.lng, to?.lat, to?.lng])
+
   if (!from || !to) {
     return (
       <div
@@ -39,36 +71,13 @@ export default function RouteMap({ from, to, height = 300, className = '' }) {
     )
   }
 
-  const center = {
-    lat: (from.lat + to.lat) / 2,
-    lng: (from.lng + to.lng) / 2,
-  }
-
   return (
-    <div style={{ height, borderRadius: 12, overflow: 'hidden' }} className={className}>
-      <MapContainer
-        center={[center.lat, center.lng]}
-        zoom={13}
-        style={{ height: '100%', width: '100%' }}
-        zoomControl={false}
-        attributionControl={false}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <Marker position={[from.lat, from.lng]} />
-        <Marker position={[to.lat, to.lng]} />
-        <Polyline
-          positions={[
-            [from.lat, from.lng],
-            [to.lat, to.lng],
-          ]}
-          color="var(--primary, #008080)"
-          weight={3}
-          dashArray="8 6"
-        />
-        <FitBounds from={from} to={to} />
-      </MapContainer>
-    </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div ref={mapEl} style={{ height, borderRadius: 12, overflow: 'hidden' }} className={className} />
+    </motion.div>
   )
 }
