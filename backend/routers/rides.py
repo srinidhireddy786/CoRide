@@ -47,9 +47,11 @@ async def search_rides(
     where = " AND ".join(conditions)
     query = f"""
         SELECT r.*, u.name as driver_name, u.avg_rating as driver_avg_rating,
-               u.total_ratings as driver_total_ratings
+               u.total_ratings as driver_total_ratings,
+               v.brand, v.model, v.registration_number as vehicle_plate
         FROM rides r
         JOIN users u ON u.id = r.owner_id
+        LEFT JOIN vehicles v ON v.id = r.vehicle_id
         WHERE {where}
         ORDER BY r.departure_time ASC
     """
@@ -79,9 +81,11 @@ async def create_ride(req: RideCreate, user_id: str = Depends(get_current_user))
 @router.get("/my")
 async def my_rides(user_id: str = Depends(get_current_user)):
     rows = await fetch(
-        """SELECT r.*, u.name as driver_name, u.avg_rating as driver_avg_rating
+        """SELECT r.*, u.name as driver_name, u.avg_rating as driver_avg_rating,
+                  v.brand, v.model, v.registration_number as vehicle_plate
            FROM rides r
            JOIN users u ON u.id = r.owner_id
+           LEFT JOIN vehicles v ON v.id = r.vehicle_id
            WHERE r.owner_id = $1
            ORDER BY r.departure_time DESC""",
         user_id,
@@ -92,10 +96,12 @@ async def my_rides(user_id: str = Depends(get_current_user)):
 async def joined_rides(user_id: str = Depends(get_current_user)):
     rows = await fetch(
         """SELECT r.*, u.name as driver_name, u.avg_rating as driver_avg_rating,
+                  v.brand, v.model, v.registration_number as vehicle_plate,
                   rr.status as booking_status
            FROM ride_requests rr
            JOIN rides r ON r.id = rr.ride_id
            JOIN users u ON u.id = r.owner_id
+           LEFT JOIN vehicles v ON v.id = r.vehicle_id
            WHERE rr.passenger_id = $1 AND rr.status != 'cancelled'
            ORDER BY r.departure_time DESC""",
         user_id,
@@ -107,9 +113,11 @@ async def get_ride(ride_id: str, user_id: str = Depends(get_current_user)):
     row = await fetchrow(
         """SELECT r.*, u.name as driver_name, u.email as driver_email,
                   u.phone as driver_phone, u.avg_rating as driver_avg_rating,
-                  u.total_ratings as driver_total_ratings
+                  u.total_ratings as driver_total_ratings,
+                  v.brand, v.model, v.registration_number as vehicle_plate
            FROM rides r
            JOIN users u ON u.id = r.owner_id
+           LEFT JOIN vehicles v ON v.id = r.vehicle_id
            WHERE r.id = $1""",
         ride_id,
     )

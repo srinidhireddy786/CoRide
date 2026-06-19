@@ -3,8 +3,8 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import AddVehicle from '../components/vehicles/AddVehicle'
-import { geocodeWithRetry } from '../lib/geocode'
-import { getDistance } from '../lib/osrm'
+import { geocodeAddress, calculateRoute } from '../lib/tomtom'
+import AddressAutocomplete from '../components/AddressAutocomplete'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -30,6 +30,8 @@ export default function OfferRide() {
     final_cost: '',
     vehicle_id: '',
   })
+  const [fromCoords, setFromCoords] = useState(null)
+  const [toCoords, setToCoords] = useState(null)
 
   useEffect(() => {
     api.get('/api/vehicles')
@@ -45,6 +47,14 @@ export default function OfferRide() {
 
   const update = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
+
+  const handleFromSelect = (item) => {
+    setFromCoords({ lat: item.lat, lon: item.lon })
+  }
+
+  const handleToSelect = (item) => {
+    setToCoords({ lat: item.lat, lon: item.lon })
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -68,24 +78,25 @@ export default function OfferRide() {
     setSaving(true)
     try {
       const [fromCoord, toCoord] = await Promise.all([
-        geocodeWithRetry(form.from_city.trim()),
-        geocodeWithRetry(form.to_city.trim()),
+        fromCoords || geocodeAddress(form.from_city.trim()),
+        toCoords || geocodeAddress(form.to_city.trim()),
       ])
 
-      const distanceKm = await getDistance(
-        fromCoord.lng,
-        fromCoord.lat,
-        toCoord.lng,
-        toCoord.lat
-      ).catch(() => null)
+      let distanceKm = null
+      try {
+        const route = await calculateRoute(fromCoord.lat, fromCoord.lon, toCoord.lat, toCoord.lon)
+        distanceKm = route.distanceMeters / 1000
+      } catch {
+        // non-critical
+      }
 
       await api.post('/api/rides', {
         from_city: form.from_city.trim(),
         to_city: form.to_city.trim(),
         from_lat: fromCoord.lat,
-        from_lng: fromCoord.lng,
+        from_lng: fromCoord.lon,
         to_lat: toCoord.lat,
-        to_lng: toCoord.lng,
+        to_lng: toCoord.lon,
         departure_time: departureTime,
         total_seats: parseInt(form.total_seats),
         final_cost: parseFloat(form.final_cost),
@@ -155,20 +166,28 @@ export default function OfferRide() {
           <div className="form-row">
             <label>
               From
-              <input
-                type="text"
+              <AddressAutocomplete
                 value={form.from_city}
-                onChange={update('from_city')}
+                onChange={(val) => {
+                  setForm((prev) => ({ ...prev, from_city: val }))
+                  setFromCoords(null)
+                }}
+                onSelect={handleFromSelect}
                 placeholder="e.g. Hitech City"
+                icon="location_on"
               />
             </label>
             <label>
               To
-              <input
-                type="text"
+              <AddressAutocomplete
                 value={form.to_city}
-                onChange={update('to_city')}
+                onChange={(val) => {
+                  setForm((prev) => ({ ...prev, to_city: val }))
+                  setToCoords(null)
+                }}
+                onSelect={handleToSelect}
                 placeholder="e.g. Gachibowli"
+                icon="near_me"
               />
             </label>
           </div>
@@ -218,7 +237,7 @@ export default function OfferRide() {
             Vehicle
             <div className="vehicle-select-row">
               <select
-                value={form.vehicle_id}
+                value={form.vehicle_id || ''}
                 onChange={update('vehicle_id')}
                 disabled={vehicles.length === 0}
               >

@@ -46,8 +46,8 @@ CoRide is a full-stack ride-sharing application that connects drivers with avail
 | **Build Tool** | Vite | 5.4 |
 | **Routing** | React Router DOM | 6.26 |
 | **Animations** | Framer Motion | 12.40 |
-| **Maps** | Leaflet + React-Leaflet | 1.9.4 / 4.2.1 |
-| **Icons** | Lucide React | 1.20 |
+| **Maps** | TomTom Web SDK Maps + Services | 6.25 |
+| **Icons** | Material Symbols (Google) | — |
 | **Notifications** | React Hot Toast | 2.4.1 |
 | **Date Formatting** | date-fns | 3.6 |
 | **Backend Framework** | FastAPI | 0.115 |
@@ -59,8 +59,8 @@ CoRide is a full-stack ride-sharing application that connects drivers with avail
 | **Frontend Hosting** | Vercel | — |
 | **Backend Hosting** | Railway (Nixpacks) | — |
 | **Database Hosting** | Supabase PostgreSQL | — |
-| **Geocoding** | Nominatim (OSM) | — |
-| **Routing** | OSRM | — |
+| **Geocoding** | TomTom Geocoding API | — |
+| **Routing** | TomTom Routing API (with traffic) | — |
 
 ---
 
@@ -115,9 +115,8 @@ CoRide/
         │   ├── supabase.js            # Supabase client (mostly unused)
         │   ├── auth.js                # Login/signup API calls
         │   ├── api.js                 # Base fetch wrapper with JWT interceptor
-        │   ├── osrm.js                # OSRM distance calculation
+        │   ├── tomtom.js              # TomTom Geocoding + Routing + Fuzzy Search
         │   ├── hyderabad.js           # Pre-defined popular routes data
-        │   └── geocode.js             # Nominatim geocoding with rate limiting
         ├── components/
         │   ├── auth/
         │   │   ├── Login.jsx
@@ -130,6 +129,7 @@ CoRide/
         │   ├── bookings/
         │   │   ├── RequestButton.jsx
         │   │   └── RequestList.jsx
+        │   ├── AddressAutocomplete.jsx  # TomTom Fuzzy Search autocomplete dropdown
         │   ├── chat/
         │   │   └── ChatWindow.jsx
         │   ├── map/
@@ -165,8 +165,8 @@ CoRide/
 │       ▼                ▼              ▼        │
 │  Pages ─── Components ─── Hooks ─── Library    │
 │                                               │
-│  Leaflet (Maps)  OSRM (Routing)  Nominatim     │
-│              (Client-side calls)               │
+│  TomTom Maps SDK (Maps)  TomTom API (Routing   │
+│  + Geocoding)  (Client-side calls)             │
 └──────────────────────┬────────────────────────┘
                        │ HTTP REST (JSON)
                        │ Bearer Token Auth
@@ -245,8 +245,7 @@ AuthContext provides:
 |------|---------|
 | `lib/api.js` | Base fetch wrapper. Automatically attaches JWT, handles 401 redirect to /login, base URL from env. |
 | `lib/auth.js` | Login/signup API calls (don't use api.js — they call backend directly without token). |
-| `lib/geocode.js` | Nominatim geocoding with 1-second rate limiting queue. Returns { lat, lng, display_name }. |
-| `lib/osrm.js` | Calculates driving distance (km) between two lat/lng pairs via OSRM. |
+| `lib/tomtom.js` | TomTom Geocoding, Fuzzy Search (autocomplete), and Routing APIs. Returns { lat, lon, formattedAddress } for geocoding, { distanceMeters, durationSeconds, trafficDurationSeconds, routeGeometry } for routing. |
 | `lib/hyderabad.js` | 12 pre-defined popular Hyderabad routes for quick search selection. |
 | `lib/supabase.js` | Supabase client. Currently only used by unused `useRealtime` hook. |
 
@@ -711,9 +710,10 @@ Dashboard ("Offer a Ride")
     → Has vehicles → show PublishRide form
   → User fills: from_city, to_city, departure_time, seats, cost
   → Client-side:
-    1. Geocode from_city: geocode.js → Nominatim API → { lat, lng }
-    2. Geocode to_city: geocode.js → Nominatim API → { lat, lng }
-    3. Calculate distance: osrm.js → OSRM API → distance_km
+    1. Geocode from_city: tomtom.js → TomTom Geocoding API → { lat, lon }
+    2. Geocode to_city: tomtom.js → TomTom Geocoding API → { lat, lon }
+    3. Calculate distance + route: tomtom.js → TomTom Routing API → { distanceMeters, durationSeconds, trafficDurationSeconds, routeGeometry }
+    (If user selected an autocomplete suggestion, the lat/lon is already known — skips geocoding)
   → POST /api/rides (all data including lat/lng/distance)
   → Backend: insert ride, add driver as participant, subtract 1 seat
   → Toast success → redirect to /my-rides
@@ -764,9 +764,10 @@ Passenger side:
   → RideDetailPage or LiveTracker
   → useRideStatus hook polls GET /api/rides/{id} every 3 seconds
   → Reads driver_lat, driver_lng, last_updated from response
-  → LiveTracker renders driver marker on Leaflet map
-  → Shows "last updated X seconds ago" indicator
-  → If last_updated > 30 seconds, shows "Location may be outdated" warning
+  → LiveTracker renders driver marker on TomTom map
+  → Calculates ETA via TomTom Routing API every 15 seconds (traffic-aware)
+  → Shows traffic-aware ETA: "12 min away (traffic: +4 min)"
+  → Shows "Updated Xs ago" staleness indicator
 ```
 
 ### 10.5 Chat Flow
@@ -828,17 +829,18 @@ NotificationBell component (rendered in Navbar)
 
 ### 11.4 Ride Publishing (PublishRide.jsx)
 - Form: from_city, to_city, date/time picker, seats, cost per seat
-- Auto-geocodes cities using Nominatim (client-side, rate limited to 1 req/sec)
-- Auto-calculates distance using OSRM
+- Live address autocomplete on FROM/TO fields via TomTom Fuzzy Search (debounced 300ms)
+- Auto-geocodes cities using TomTom Geocoding API (skipped if autocomplete already provided coords)
+- Auto-calculates distance + route geometry using TomTom Routing API (with traffic)
 - Vehicle selector dropdown (fetches user's vehicles)
 - Loading states during geocoding/distance calculation
 
 ### 11.5 Ride Search (SearchRides.jsx)
 - Search bar with from/to city inputs + date picker
-- Debounced auto-search (600ms)
+- Live address autocomplete on FROM/TO fields via TomTom Fuzzy Search
 - Popular Hyderabad routes grid (12 routes in hyderabad.js):
   - HITEC City → Gachibowli, Kondapur → Madhapur, Secunderabad → Ameerpet, LB Nagar → Dilsukhnagar, etc.
-- Results as RideCard grid/list
+- Results as RideCard grid/list with TomTom map previews
 - Loading skeletons during search
 - Empty state when no rides found
 
@@ -851,7 +853,7 @@ NotificationBell component (rendered in Navbar)
 ### 11.7 Ride Detail Page (RideDetailPage.jsx)
 - The most feature-rich page. Shows:
   - Full ride info (route, time, driver, vehicle, cost, distance, seats)
-  - RouteMap (Leaflet map showing source → destination markers + polyline)
+  - RouteMap (TomTom map showing source → destination markers + actual route geometry)
   - Action buttons based on role and status:
     - Owner: Start Ride, Cancel Ride, Complete Ride
     - Passenger: Request Seat (or shows booking status)
@@ -872,17 +874,18 @@ NotificationBell component (rendered in Navbar)
 
 ### 11.9 Live Tracker (LiveTracker.jsx)
 - Rendered during `in_progress` rides
-- Leaflet map with driver marker
-- Shows "last updated X seconds ago" with color coding
-- Warning if location is stale (>30 seconds)
-- Passenger-side only
+- TomTom map with driver marker
+- Calculates traffic-aware ETA via TomTom Routing API (polled every 15 seconds)
+- Shows "12 min away (traffic: +4 min)" when traffic data is available
+- Shows "Updated Xs ago" staleness indicator
+- Driver-side and passenger-side
 
 ### 11.10 Route Map (RouteMap.jsx)
-- Leaflet map with:
-  - Start marker (green) + End marker (red)
-  - Polyline route between source and destination
-  - Map.fitBounds to show entire route
-  - OpenStreetMap tiles
+- TomTom map (two variants: `components/maps/RouteMap.jsx` and `components/map/RouteMap.jsx`)
+- Start marker + End marker
+- Actual route geometry from TomTom Routing API (not a straight line)
+- `map.fitBounds` to show entire route
+- Driver location marker support (in the `components/map/` variant)
 
 ### 11.11 Rating (RatingModal.jsx)
 - Star rating (1-5, clickable with hover effect)
@@ -995,9 +998,9 @@ NotificationBell component (rendered in Navbar)
 
 | Service | Purpose | Usage | Notes |
 |---------|---------|-------|-------|
-| **Nominatim** (OpenStreetMap) | Geocoding city names → lat/lng | Client-side via `geocode.js` | Rate-limited: 1 request/sec. Queue-based impl. |
-| **OSRM** | Driving distance calculation | Client-side via `osrm.js` | Uses `https://routing.openstreetmap.de/routed-car/route/v1/driving/` |
-| **Leaflet / OpenStreetMap** | Map tiles | Client-side via `react-leaflet` | Free, no API key needed |
+| **TomTom Maps SDK** | Map tiles, markers, layers | Client-side via `@tomtom-international/web-sdk-maps` | Requires API key (`VITE_TOMTOM_API_KEY`). Maps CSS imported in `main.jsx`. |
+| **TomTom Geocoding API** | Geocoding city names → lat/lon + Fuzzy Search autocomplete | Client-side via `lib/tomtom.js` | Hyderabad-biased (lat=17.385, lon=78.4867, radius=50km). |
+| **TomTom Routing API** | Driving distance + route geometry + traffic-aware ETA | Client-side via `lib/tomtom.js` | Returns `distanceMeters`, `durationSeconds`, `trafficDurationSeconds`, `routeGeometry`. |
 | **Supabase** | PostgreSQL hosting | Backend database | Used only as DB host; real-time features not actually used |
 | **Railway** | Backend hosting | Deploy via Nixpacks | `railway.json` config |
 | **Vercel** | Frontend hosting | Deploy via git | `vercel.json` for SPA rewrites |
@@ -1016,7 +1019,9 @@ vercel.json:
 - SPA fallback: all routes serve `index.html`
 - Build command: `npm run build` (Vite)
 - Output directory: `dist/`
-- Environment variable: `VITE_API_URL` = backend URL
+- Environment variables:
+  - `VITE_API_URL` = backend URL
+  - `VITE_TOMTOM_API_KEY` = TomTom developer API key
 
 ### Backend (Railway)
 ```
@@ -1073,8 +1078,8 @@ run.ps1 script:
 - No WebSocket or Server-Sent Events are used.
 
 ### External API Limitations
-- **Nominatim** geocoding is rate-limited (1 request/second). The `geocode.js` file implements a queue to respect this, but rapid geocoding of both cities sequentially takes ~2 seconds minimum.
-- **OSRM** routing depends on the public demo server which may have availability/performance issues.
+- **TomTom Geocoding/Routing** requires a valid API key (`VITE_TOMTOM_API_KEY`). Without it, geocoding, routing, and maps will fail.
+- The TomTom Free Tier has usage limits (2,500 transactions/day for geocoding, 1,000 transactions/day for routing).
 
 ### Database Schema Management
 - There are no migration files in the repository. The schema is managed manually (likely via Supabase dashboard or direct SQL).

@@ -5,7 +5,7 @@ A ride-sharing application connecting drivers and passengers with real-time chat
 ## Tech Stack
           
 
-- **Frontend:** React + Vite, Framer Motion, Leaflet Maps, react-hot-toast
+- **Frontend:** React + Vite, Framer Motion, TomTom Maps SDK, react-hot-toast
 - **Backend:** FastAPI (Python), asyncpg, JWT auth (bcrypt + HS256)
 - **Database:** PostgreSQL (via Supabase)
 
@@ -21,13 +21,15 @@ A ride-sharing application connecting drivers and passengers with real-time chat
 
 - Search rides by origin, destination, and date
 - Popular Hyderabad route chips for quick selection
-- Leaflet map previews with OSRM route polyline on each ride card
+- TomTom map previews with actual route geometry on each ride card
+- Address autocomplete with TomTom Fuzzy Search on FROM/TO fields
 - Sort results by departure time or price
 
 ### Ride Offering
 
 - Publish a ride with origin, destination, date/time, seats, fare, and vehicle
-- Client-side Nominatim geocoding and OSRM distance calculation
+- Client-side TomTom Geocoding API (Hyderabad-biased) and TomTom Routing API with traffic
+- Address autocomplete with TomTom Fuzzy Search on FROM/TO fields
 - Auto-populate from 12 popular routes
 
 ### Ride Management
@@ -56,6 +58,7 @@ A ride-sharing application connecting drivers and passengers with real-time chat
 
 - Driver broadcasts GPS coordinates via `watchPosition`
 - Passenger polls driver location every 3 seconds
+- TomTom map with driver marker, traffic-aware ETA (duration vs traffic duration)
 - Activated from the ride detail page
 
 ### Notifications
@@ -141,6 +144,12 @@ python -m uvicorn main:app --reload
 ```
 
 **Frontend:**
+
+Create a `.env` file in `frontend/` (or edit the existing one):
+```
+VITE_API_URL=http://localhost:8000
+VITE_TOMTOM_API_KEY=your_tomtom_api_key_here
+```
 
 ```bash
 cd frontend
