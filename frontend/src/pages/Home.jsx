@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { POPULAR_ROUTES } from '../lib/hyderabad'
 import useScrollReveal from '../hooks/useScrollReveal'
+import toast from 'react-hot-toast'
 
 function SectionLabel({ children }) {
   const [ref, isVisible] = useScrollReveal()
@@ -40,6 +41,20 @@ function LandingPage() {
   const [stepsRef, stepsVisible] = useScrollReveal({ threshold: 0.1 })
   const [visionRef, visionVisible] = useScrollReveal({ threshold: 0.1 })
   const [ctaRef, ctaVisible] = useScrollReveal({ threshold: 0.1 })
+
+  const handleShare = useCallback(async () => {
+    const url = window.location.href
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'CoRide', text: 'Join CoRide - Premium ride-sharing for professionals', url })
+      } catch {
+        // User cancelled or error
+      }
+    } else {
+      await navigator.clipboard.writeText(url)
+      toast.success('Link copied to clipboard!')
+    }
+  }, [])
 
   return (
     <div className="landing">
@@ -218,26 +233,16 @@ function LandingPage() {
               <h4>Secure Chat</h4>
               <p>Coordinate pickups without sharing personal contact numbers.</p>
             </motion.div>
-            <motion.div
-              className="bento-card"
-              initial={{ opacity: 0, y: 20 }}
-              animate={featuresVisible ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.25 }}
-            >
-              <span className="material-symbols-outlined bento-icon">search</span>
-              <h4>Easy Search</h4>
-              <p>Smart filters for time, route, vehicle type and preferences.</p>
-            </motion.div>
-            <motion.div
-              className="bento-card"
-              initial={{ opacity: 0, y: 20 }}
-              animate={featuresVisible ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <span className="material-symbols-outlined bento-icon">verified</span>
-              <h4>Vehicle Audit</h4>
-              <p>Every vehicle undergoes a visual and documentation check.</p>
-            </motion.div>
+          <motion.div
+            className="bento-card"
+            initial={{ opacity: 0, y: 20 }}
+            animate={featuresVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5, delay: 0.25 }}
+          >
+            <span className="material-symbols-outlined bento-icon">search</span>
+            <h4>Easy Search</h4>
+            <p>Smart filters for time, route, vehicle type and preferences.</p>
+          </motion.div>
           </div>
         </div>
       </section>
@@ -424,22 +429,21 @@ function LandingPage() {
           </div>
           <div className="footer-col">
             <h4>Company</h4>
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
-            <a href="#">Careers</a>
-          </div>
-          <div className="footer-col">
-            <h4>Support</h4>
-            <a href="#">Help Center</a>
-            <a href="#">Contact</a>
-            <a href="#">Corporate Solutions</a>
+            <Link to="/privacy-policy" className="footer-link">Privacy Policy</Link>
+            <Link to="/terms-of-service" className="footer-link">Terms of Service</Link>
           </div>
           <div className="footer-col">
             <h4>Connect</h4>
             <div className="footer-social">
-              <a href="#" className="social-icon"><span className="material-symbols-outlined">share</span></a>
-              <a href="#" className="social-icon"><span className="material-symbols-outlined">mail</span></a>
-              <a href="#" className="social-icon"><span className="material-symbols-outlined">language</span></a>
+              <button className="social-icon" onClick={handleShare} aria-label="Share">
+                <span className="material-symbols-outlined">share</span>
+              </button>
+              <a href="mailto:support@coride.com" className="social-icon" aria-label="Email us">
+                <span className="material-symbols-outlined">mail</span>
+              </a>
+              <Link to="/" className="social-icon" aria-label="Home">
+                <span className="material-symbols-outlined">language</span>
+              </Link>
             </div>
           </div>
         </div>

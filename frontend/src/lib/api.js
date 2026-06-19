@@ -1,18 +1,18 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
-let token = localStorage.getItem('coride_token')
+let isHandling401 = false
 
 export function setToken(t) {
-  token = t
   if (t) localStorage.setItem('coride_token', t)
   else localStorage.removeItem('coride_token')
 }
 
 export function getToken() {
-  return token
+  return localStorage.getItem('coride_token')
 }
 
 async function request(method, path, body) {
+  const token = getToken()
   const headers = { 'Content-Type': 'application/json' }
   if (token) headers['Authorization'] = `Bearer ${token}`
 
@@ -24,8 +24,10 @@ async function request(method, path, body) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }))
-    if (res.status === 401) {
+    if (res.status === 401 && !isHandling401) {
+      isHandling401 = true
       setToken(null)
+      localStorage.removeItem('coride_user')
       window.location.href = '/login'
     }
     throw new Error(err.detail || 'Request failed')
