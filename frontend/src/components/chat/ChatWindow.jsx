@@ -46,13 +46,19 @@ export default function ChatWindow({ rideId, conversation }) {
     if (rideId) {
       api.get(`/api/rides/${rideId}`)
         .then((ride) => {
-          const name =
-            ride?.driver_name ||
-            ride?.driver?.name ||
-            ride?.passenger_name ||
-            ride?.user?.name ||
-            ''
-          if (name) setConvName(name)
+          if (ride?.owner_id !== user?.id) {
+            const name =
+              ride?.driver_name ||
+              ride?.driver?.name ||
+              ride?.passenger_name ||
+              ride?.user?.name ||
+              ''
+            if (name) setConvName(name)
+          } else {
+            if (!convName || convName === 'Unknown') {
+              setConvName('Passengers')
+            }
+          }
           if (ride?.driver_phone) setDriverPhone(ride.driver_phone)
         })
         .catch(() => {})
@@ -211,9 +217,12 @@ export default function ChatWindow({ rideId, conversation }) {
                 layout
               >
                 {msg.sender_id !== user.id && (
-                  <div className="chat-msg-avatar-sm">{getInitials(convName)}</div>
+                  <div className="chat-msg-avatar-sm">{getInitials(msg.sender_name || convName)}</div>
                 )}
                 <div className="chat-msg-content">
+                  {msg.sender_id !== user.id && (
+                    <span className="chat-msg-sender-name">{msg.sender_name || 'CoRider'}</span>
+                  )}
                   <div className={`chat-msg-bubble ${msg.sender_id === user.id ? 'mine' : 'theirs'}`}>
                     {isLocationMsg(msg.content) ? (
                       <a href={msg.content} target="_blank" rel="noreferrer" className="chat-location-card">

@@ -71,13 +71,15 @@ async def get_conversations(user_id: str = Depends(get_current_user)):
             r.to_city,
             r.status,
             r.departure_time,
+            r.owner_id,
             -- Get the other person's name (if user is passenger, get driver; if driver, get a passenger)
             CASE
-                WHEN r.owner_id = $1 THEN (
-                    SELECT u.name FROM ride_requests rr
-                    JOIN users u ON u.id = rr.passenger_id
-                    WHERE rr.ride_id = r.id AND rr.status = 'accepted'
-                    LIMIT 1
+                WHEN r.owner_id = $1 THEN COALESCE(
+                    (SELECT u.name FROM ride_requests rr
+                     JOIN users u ON u.id = rr.passenger_id
+                     WHERE rr.ride_id = r.id AND rr.status = 'accepted'
+                     LIMIT 1),
+                    'Passengers'
                 )
                 ELSE (
                     SELECT u.name FROM users u WHERE u.id = r.owner_id
