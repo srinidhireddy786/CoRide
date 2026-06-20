@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useRideStatus } from '../hooks/useRideStatus'
 import RequestButton from '../components/bookings/RequestButton'
 import RouteMap from '../components/maps/RouteMap'
-import { formatCurrency, formatRideTime, formatVehicleName, getDriverName } from '../lib/rideDisplay'
+import { formatCurrency, formatRideDateTime, formatVehicleName, getDriverName } from '../lib/rideDisplay'
 
 const STEP_ORDER = ['open', 'in_progress', 'completed']
 
@@ -310,7 +310,7 @@ export default function RideDetailPage() {
                 <span className="route-fare-label">Estimated Fare</span>
                 <span className="route-fare-value">{formatCurrency(ride.final_cost ?? ride.price_per_seat)}</span>
               </div>
-              <span className="route-corp-badge">{formatRideTime(ride.departure_time)}</span>
+              <span className="route-corp-badge">{formatRideDateTime(ride.departure_time)}</span>
             </div>
           </motion.div>
 

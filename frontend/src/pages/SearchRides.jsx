@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import RouteMap from '../components/maps/RouteMap'
-import { formatCurrency, formatRideTime, formatVehicleName, getDriverName } from '../lib/rideDisplay'
+import { formatCurrency, formatRideDateTime, formatVehicleName, getDriverName } from '../lib/rideDisplay'
 import AddressAutocomplete from '../components/AddressAutocomplete'
 
 const SORT_OPTIONS = [
@@ -284,7 +284,7 @@ export default function SearchRides() {
                           </div>
                           <div className="ride-card-departure">
                             <span className="ride-departure-label">Departure</span>
-                            <span className="ride-departure-time">{formatRideTime(ride.departure_time)}</span>
+                            <span className="ride-departure-time">{formatRideDateTime(ride.departure_time)}</span>
                           </div>
                         </div>
                         <div className="ride-card-features">
@@ -408,7 +408,7 @@ export default function SearchRides() {
                           </div>
                           <div className="ride-card-departure">
                             <span className="ride-departure-label">Departure</span>
-                            <span className="ride-departure-time">{formatRideTime(ride.departure_time)}</span>
+                            <span className="ride-departure-time">{formatRideDateTime(ride.departure_time)}</span>
                           </div>
                         </div>
 
