@@ -305,7 +305,7 @@ export default function ChatWindow({ rideId, conversation }) {
           </div>
           <motion.button
             className="chat-send-btn"
-            onClick={send}
+            onClick={() => send()}
             disabled={sending || !content.trim()}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.92 }}
