@@ -5991,6 +5991,16 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   font-variation-settings: 'FILL' 1;
 }
 
+.chat-msg-sender-name {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--on-text-muted, #7c7c7c);
+  margin-bottom: 3px;
+  padding: 0 4px;
+  font-weight: 500;
+  text-align: left;
+}
+
 /* Map Share Card in Chat */
 .chat-map-share-card {
   margin-top: 8px;
